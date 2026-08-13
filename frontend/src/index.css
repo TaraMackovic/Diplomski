@@ -1,0 +1,9 @@
+.app-content {
+    padding-bottom: 70px;
+}
+
+@media (min-width: 900px) {
+    .app-content {
+        padding-bottom: 0;
+    }
+}

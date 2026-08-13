@@ -1,0 +1,98 @@
+.event-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.event-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px;
+}
+
+.event-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    image-rendering: auto;
+}
+
+.event-price {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.65);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+
+.event-body {
+    padding: 16px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.event-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 12px;
+    min-height: 2.4em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2em;
+}
+
+.event-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.event-date {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.event-location {
+    font-size: 13px;
+    color: #777;
+}
+
+.event-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.event-actions img {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.event-actions img:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}

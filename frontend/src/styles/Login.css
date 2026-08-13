@@ -1,0 +1,155 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #F6F5EF;
+    padding: 20px;
+
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+
+}
+
+.auth-card h1 {
+    text-align: center;
+    color: #363668;
+    font-size: 54px;
+    font-family: "Times New Roman", serif;
+    font-weight: 500;
+}
+
+.welcome-logo {
+    width: 400px;
+    align-self: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: #363668;
+    font-size: 22px;
+    margin-top: -10px;
+}
+
+.input-box {
+    display: flex;
+    align-items: center;
+    height: 72px;
+    background: white;
+    border-radius: 22px;
+    padding: 0 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18);
+}
+
+.input-box img {
+    width: 26px;
+    margin-right: 16px;
+}
+
+.input-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 18px;
+}
+
+.eye-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.eye-btn img {
+    width: 24px;
+    margin: 0;
+}
+
+.forgot-password {
+    margin-top: -10px;
+    text-align: right;
+    color: #363668;
+    cursor: pointer;
+}
+
+.auth-button {
+    height: 68px;
+    border: none;
+    border-radius: 20px;
+    background: #3D3B92;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    transition: .25s;
+    box-shadow: 0 4px 10px rgba(0,0,0,.25);
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+}
+
+.bottom-text {
+    text-align: center;
+    color: #363668;
+}
+
+.bottom-text a {
+    color: #EB5A5A;
+    text-decoration: none;
+    margin-left: 6px;
+    font-weight: 600;
+}
+
+.error {
+    color: red;
+    text-align: center;
+}
+
+@media (max-width:700px){
+
+    .auth-page{
+        padding:20px;
+    }
+
+    .auth-card{
+        max-width:100%;
+    }
+
+    .auth-card h1{
+        font-size:42px;
+    }
+
+    .welcome-logo{
+        width:170px;
+    }
+
+    .subtitle{
+        font-size:18px;
+    }
+
+    .auth-button{
+        font-size:22px;
+    }
+}
+
+.success-msg {
+    color: #2b7a3c;
+    text-align: center;
+    font-size: 14px;
+    background: #eafaf0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.forgot-password {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
