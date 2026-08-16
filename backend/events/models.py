@@ -31,7 +31,7 @@ class Event(models.Model):
     date = models.DateTimeField()
     time_known = models.BooleanField(default=True)
 
-    image = models.URLField(blank=True, null=True)
+    image = models.URLField(max_length=500, blank=True, null=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     category = models.ForeignKey(
@@ -77,7 +77,7 @@ class EventSource(models.Model):
         max_length=100,
         help_text="Grad Banja Luka, NP RS, SC Borik...",
     )
-    source_url = models.URLField()
+    source_url = models.URLField(max_length=500)
 
     class Meta:
         constraints = [
