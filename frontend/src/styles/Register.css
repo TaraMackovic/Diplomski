@@ -4,86 +4,152 @@
     justify-content: center;
     align-items: center;
     background: #f6f5ef;
-    padding: 40px;
+    padding: 20px;
 }
 
 .register-card {
     width: 100%;
-    max-width: 500px;
-    background: transparent;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 28px;
+    border: 1px solid #ececf5;
+    box-shadow: 0 20px 50px rgba(52, 52, 93, 0.1), 0 2px 8px rgba(52, 52, 93, 0.06);
+    padding: 40px 36px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 18px;
 }
 
 .register-card h1 {
     text-align: center;
-    font-size: 52px;
+    font-size: 30px;
     font-family: "Times New Roman", serif;
     font-weight: 500;
-    color: #34345d;
-    margin-bottom: 15px;
+    color: #2c2c56;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px;
+}
+
+.register-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.input-row {
+    display: flex;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.input-plain {
+    flex: 1;
+    height: 56px;
+    border: 1.5px solid #e4e4ef;
+    outline: none;
+    background: #fbfbfd;
+    border-radius: 16px;
+    padding: 0 18px;
+    font-size: 15px;
+    color: #2c2c56;
+    box-sizing: border-box;
+    min-width: 0;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.input-plain:focus {
+    border-color: #37388e;
+    background: #ffffff;
+}
+
+.input-plain::placeholder {
+    color: #a3a3b8;
 }
 
 .input-box {
-    height: 70px;
-    background: white;
-    border-radius: 22px;
+    height: 56px;
+    background: #fbfbfd;
+    border: 1.5px solid #e4e4ef;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     padding: 0 18px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.input-box:focus-within {
+    border-color: #37388e;
+    background: #ffffff;
 }
 
 .input-box img {
-    width: 26px;
-    margin-right: 18px;
-    opacity: 0.75;
+    width: 20px;
+    margin-right: 14px;
+    opacity: 0.55;
 }
 
 .input-box input {
     flex: 1;
     border: none;
     outline: none;
-    font-size: 18px;
+    font-size: 15px;
     background: transparent;
+    color: #2c2c56;
+}
+
+.input-box input::placeholder {
+    color: #a3a3b8;
 }
 
 .eye-btn {
     border: none;
     background: none;
     cursor: pointer;
+    display: flex;
+    align-items: center;
 }
 
 .eye-btn img {
-    width: 24px;
+    width: 18px;
     margin: 0;
+    opacity: 0.5;
 }
 
 .register-btn {
-    height: 65px;
+    height: 54px;
     border: none;
-    border-radius: 20px;
+    border-radius: 16px;
     background: #37388e;
     color: white;
-    font-size: 28px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    transition: 0.25s;
+    box-shadow: 0 8px 20px rgba(55, 56, 142, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 4px;
 }
 
 .register-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(55, 56, 142, 0.38);
 }
 
 .error {
-    color: red;
+    color: #c23b3b;
+    background: #fdecec;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
     text-align: center;
+    margin: 0;
 }
 
 .login-text {
     text-align: center;
-    font-size: 18px;
+    font-size: 14px;
+    color: #7a7a95;
+    margin: 0;
 }
 
 .login-text a {
@@ -95,23 +161,30 @@
 
 @media (max-width: 700px) {
     .register-page {
-        padding: 20px;
+        padding: 16px;
     }
 
     .register-card {
-        max-width: 100%;
+        padding: 28px 20px;
+        border-radius: 22px;
     }
 
     .register-card h1 {
-        font-size: 38px;
+        font-size: 24px;
     }
 
-    .input-box {
-        height: 62px;
+    .input-box,
+    .input-plain {
+        height: 52px;
     }
 
     .register-btn {
-        font-size: 22px;
-        height: 58px;
+        font-size: 15px;
+        height: 50px;
+    }
+
+    .input-row {
+        flex-direction: column;
+        gap: 14px;
     }
 }

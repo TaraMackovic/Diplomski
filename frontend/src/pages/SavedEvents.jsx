@@ -76,8 +76,8 @@ function SavedEvents() {
                 {filteredEvents.length === 0 ? (
                     <p className="saved-empty">
                         {timeFilter === "past"
-                            ? "Nemaš prethodnih sačuvanih događaja."
-                            : "Nemaš sačuvanih nadolazećih događaja."}
+                            ? "Nemate prethodnih sačuvanih događaja."
+                            : "Nemate sačuvanih nadolazećih događaja."}
                     </p>
                 ) : (
                     <>
