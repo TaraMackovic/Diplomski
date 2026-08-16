@@ -10,13 +10,20 @@ import "../styles/Navbar.css";
 
 function Navbar() {
     const navigate = useNavigate();
+    const isLoggedIn = !!localStorage.getItem("access_token");
 
-    const navItems = [
-        { to: "/userHome", label: "Home", icon: homeIcon },
-        { to: "/saved", label: "Saved", icon: savedIcon },
-        { to: "/profile", label: "Profile", icon: profileIcon },
-        { to: "/settings", label: "Settings", icon: settingsIcon },
-    ];
+    const navItems = isLoggedIn
+        ? [
+              { to: "/userHome", label: "Home", icon: homeIcon },
+              { to: "/saved", label: "Saved", icon: savedIcon },
+              { to: "/profile", label: "Profile", icon: profileIcon },
+              { to: "/settings", label: "Settings", icon: settingsIcon },
+          ]
+        : [
+              { to: "/userHome", label: "Home", icon: homeIcon },
+              { to: "/login", label: "Prijava", button: true },
+              { to: "/register", label: "Registracija", button: true },
+          ];
 
     return (
         <>
@@ -28,21 +35,24 @@ function Navbar() {
                     </div>
 
                     <div className="navbar-links">
-                        {navItems.map(({ to, label, icon }) => (
+                        {navItems.map(({ to, label, icon, button }) => (
                             <NavLink
                                 key={to}
                                 to={to}
                                 className={({ isActive }) =>
-                                    isActive
-                                        ? "navbar-link active"
-                                        : "navbar-link"
+                                    button
+                                        ? `navbar-button ${isActive ? "active" : ""}`
+                                        : `navbar-link ${isActive ? "active" : ""}`
                                 }
                             >
-                                <img
-                                    src={icon}
-                                    alt={label}
-                                    className="navbar-icon"
-                                />
+                                {icon && (
+                                    <img
+                                        src={icon}
+                                        alt={label}
+                                        className="navbar-icon"
+                                    />
+                                )}
+
                                 <span>{label}</span>
                             </NavLink>
                         ))}
@@ -53,21 +63,24 @@ function Navbar() {
 
             {/* Mobile navbar */}
             <nav className="bottom-tabbar">
-                {navItems.map(({ to, label, icon }) => (
+                {navItems.map(({ to, label, icon, button }) => (
                     <NavLink
                         key={to}
                         to={to}
                         className={({ isActive }) =>
-                            isActive
-                                ? "tabbar-item active"
-                                : "tabbar-item"
+                            button
+                                ? `tabbar-button ${isActive ? "active" : ""}`
+                                : `tabbar-item ${isActive ? "active" : ""}`
                         }
                     >
-                        <img
-                            src={icon}
-                            alt={label}
-                            className="navbar-icon"
-                        />
+                        {icon && (
+                            <img
+                                src={icon}
+                                alt={label}
+                                className="navbar-icon"
+                            />
+                        )}
+
                         <span>{label}</span>
                     </NavLink>
                 ))}

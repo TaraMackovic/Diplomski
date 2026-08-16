@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserHome from "./pages/UserHome";
@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Navbar from "./components/Navbar";
 import InterestsOnboarding from "./pages/InterestsOnboarding";
+import GuestAccess from "./components/GuestAccess";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -20,6 +21,16 @@ function AppLayout({ children }) {
             <div className="app-content">{children}</div>
         </>
     );
+}
+
+function RequireAuth({ children }) {
+    const navigate = useNavigate();
+
+    if (!localStorage.getItem("access_token")) {
+        return <GuestAccess onClose={() => navigate("/userHome")} />;
+    }
+
+    return children;
 }
 
 function App() {
@@ -51,7 +62,9 @@ function App() {
                     path="/saved"
                     element={
                         <AppLayout>
-                            <SavedEvents />
+                            <RequireAuth>
+                                <SavedEvents />
+                            </RequireAuth>
                         </AppLayout>
                     }
                 />
@@ -60,7 +73,9 @@ function App() {
                     path="/profile"
                     element={
                         <AppLayout>
-                            <Profile />
+                            <RequireAuth>
+                                <Profile />
+                            </RequireAuth>
                         </AppLayout>
                     }
                 />
@@ -69,7 +84,9 @@ function App() {
                     path="/settings"
                     element={
                         <AppLayout>
-                            <Settings />
+                            <RequireAuth>
+                                <Settings />
+                            </RequireAuth>
                         </AppLayout>
                     }
                 />
@@ -81,8 +98,8 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
 
-
-                <Route path="*" element={<Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to="/userHome" />} />
+                <Route path="*" element={<Navigate to="/userHome" />} />
             </Routes>
         </BrowserRouter>
     );

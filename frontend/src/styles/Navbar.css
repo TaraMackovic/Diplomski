@@ -61,7 +61,39 @@
     color: #e0435c;
 }
 
+.navbar-button {
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    background: #2b2b6e;
+    color: #fff;
+    transition: 0.2s;
+}
 
+.navbar-button:hover {
+    transform: translateY(-1px);
+    background: #e0435c;
+}
+
+.navbar-button.active {
+    background: #2b2b6e;
+}
+
+.tabbar-button {
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #2b2b6e;
+    color: #fff;
+}
+
+.tabbar-button.active {
+    background: #2b2b6e;
+}
 
 
 

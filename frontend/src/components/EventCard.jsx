@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import GuestAccess from "./GuestAccess";
 
 import shareIcon from "../assets/icons/icon_share.png";
 import saveIcon from "../assets/icons/icon_to_save.png";
@@ -15,6 +16,7 @@ function EventCard({ event }) {
 
     const [saved, setSaved] = useState(false);
     const [checkingSaved, setCheckingSaved] = useState(true);
+    const [showAuth, setShowAuth] = useState(false);
 
     const isLoggedIn = () => !!localStorage.getItem("access_token");
 
@@ -64,8 +66,7 @@ function EventCard({ event }) {
         e.stopPropagation();
 
         if (!isLoggedIn()) {
-            alert("Morate biti prijavljeni da biste sačuvali događaj.");
-            navigate("/login");
+            setShowAuth(true);
             return;
         }
 
@@ -148,6 +149,12 @@ function EventCard({ event }) {
                     </div>
                 </div>
             </div>
+
+            {showAuth && (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <GuestAccess onClose={() => setShowAuth(false)} />
+                </div>
+            )}
         </div>
     );
 }

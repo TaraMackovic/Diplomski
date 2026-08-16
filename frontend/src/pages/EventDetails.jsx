@@ -4,6 +4,7 @@ import api from "../services/api";
 import iconToSave from "../assets/icons/icon_to_save.png";
 import iconToUnsave from "../assets/icons/icon_to_unsave.png";
 import EventMap from "../components/EventMap";
+import GuestAccess from "../components/GuestAccess";
 import "../styles/EventDetails.css";
 
 function EventDetails() {
@@ -15,6 +16,7 @@ function EventDetails() {
     const [error, setError] = useState(null);
     const [isSaved, setIsSaved] = useState(false);
     const [similarEvents, setSimilarEvents] = useState([]);
+    const [showAuth, setShowAuth] = useState(false);
 
     useEffect(() => {
         loadEvent();
@@ -49,8 +51,7 @@ function EventDetails() {
 
     const toggleSave = async () => {
         if (!isLoggedIn()) {
-            alert("Morate biti prijavljeni da biste sačuvali događaj.");
-            navigate("/login");
+            setShowAuth(true);
             return;
         }
 
@@ -194,6 +195,8 @@ function EventDetails() {
                     )}
                 </div>
             </div>
+
+            {showAuth && <GuestAccess onClose={() => setShowAuth(false)} />}
         </div>
     );
 }
