@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EventCard from "../components/EventCard";
 import FilterDrawer from "../components/FilterDrawer";
+import Pagination from "../components/Pagination";
 import { mapEvent } from "../utils/mapEvent";
 import { applyFilters, countActiveFilters, DEFAULT_FILTERS } from "../utils/applyFilters";
 import "../styles/UserHome.css";
@@ -10,6 +11,7 @@ import searchIcon from "../assets/icons/icon_search.png";
 import filterIcon from "../assets/icons/icon_filter.png";
 
 const API_URL = "http://localhost:8000";
+const EVENTS_PER_PAGE = 12;
 
 function UserHome() {
 
@@ -24,10 +26,16 @@ function UserHome() {
     const [showFilterDrawer, setShowFilterDrawer] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
 
+    const [page, setPage] = useState(1);
+
     useEffect(() => {
         loadEvents();
         loadRecommended();
     }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filters]);
 
 
     const loadEvents = async () => {
@@ -109,6 +117,12 @@ function UserHome() {
 
     const resultEvents = applyFilters(searchedEvents, filters, userLocation);
 
+    const totalPages = Math.ceil(resultEvents.length / EVENTS_PER_PAGE) || 1;
+    const paginatedEvents = resultEvents.slice(
+        (page - 1) * EVENTS_PER_PAGE,
+        page * EVENTS_PER_PAGE
+    );
+
     return (
 
         <div className="home-page">
@@ -155,11 +169,19 @@ function UserHome() {
                             : "Nema događaja koji odgovaraju odabranim filterima."}
                     </p>
                 ) : (
-                    <div className="event-grid">
-                        {resultEvents.map((event) => (
-                            <EventCard key={event.id} event={event} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="event-grid">
+                            {paginatedEvents.map((event) => (
+                                <EventCard key={event.id} event={event} />
+                            ))}
+                        </div>
+
+                        <Pagination
+                            page={page}
+                            totalPages={totalPages}
+                            onChange={setPage}
+                        />
+                    </>
                 )}
 
             </div>

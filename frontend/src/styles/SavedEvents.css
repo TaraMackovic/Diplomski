@@ -20,6 +20,28 @@
     color: #666;
 }
 
+.time-toggle {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.time-toggle button {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+}
+
+.time-toggle button.active {
+    background: #2F315C;
+    color: #fff;
+    border-color: #2F315C;
+}
+
 
 
 .event-grid {
