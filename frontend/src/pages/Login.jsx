@@ -27,7 +27,14 @@ function Login() {
             });
             localStorage.setItem("access_token", response.data.access);
             localStorage.setItem("refresh_token", response.data.refresh);
-            navigate("/userHome");
+            localStorage.setItem("is_staff", response.data.user.is_staff);
+            
+            if (response.data.user.is_staff) {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/userHome");
+            }
+
         } catch (error) {
             setErrorMsg(
                 error.response?.data?.message ||

@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 
     'events',
     'users',
-    
+    'admins',
     
 ]
 

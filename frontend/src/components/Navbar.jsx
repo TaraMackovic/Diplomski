@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
 import homeIcon from "../assets/icons/icon_home.png";
 import savedIcon from "../assets/icons/icon_saved.png";
@@ -10,7 +10,13 @@ import "../styles/Navbar.css";
 
 function Navbar() {
     const navigate = useNavigate();
+    const location = useLocation();
     const isLoggedIn = !!localStorage.getItem("access_token");
+    const isStaff = localStorage.getItem("is_staff") === "true";
+
+     if (isStaff && location.pathname.startsWith("/admin")) {
+        return null;
+    }
 
     const navItems = isLoggedIn
         ? [
