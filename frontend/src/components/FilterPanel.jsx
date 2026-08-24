@@ -39,14 +39,18 @@ function FilterPanel({ filters, onApply, onClose }) {
     };
 
     const handleReset = () => {
-        setDraft({
+        const resetFilters = {
             sort: null,
             dateOption: "any",
             customDateFrom: "",
             customDateTo: "",
             categories: [],
             onlyFree: false,
-        });
+        };
+
+        setDraft(resetFilters);
+        onApply(resetFilters);
+        onClose();
     };
 
     const handleApply = () => {

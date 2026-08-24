@@ -36,7 +36,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"{script} gotovo."))
 
       
-        self.stdout.write("merge_events_auto.py...")
+        self.stdout.write("merge_events.py...")
         result = subprocess.run(
             [sys.executable, str(SCRAPERS_DIR / "merge_events.py")],
             cwd=SCRAPERS_DIR,

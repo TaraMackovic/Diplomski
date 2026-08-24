@@ -10,4 +10,6 @@ urlpatterns = [
     path("categories/", views.categories),
     path("interests/", views.all_interests),
     path("my-interests/", views.my_interests),
+    path("events/<int:id>/similar/", views.similar_events),
+    path("events/recommended/", views.recommended_events),
 ]

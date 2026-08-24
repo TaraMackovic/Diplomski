@@ -15,6 +15,7 @@ from .serializers import SavedEventSerializer
 from .models import Interest, UserInterest
 from .serializers import InterestSerializer
 
+from .recommendations import get_similar_events, get_recommendations_for_user, get_cold_start_recommendations
 
 @api_view(["GET"])
 def all_events(request):
@@ -107,3 +108,16 @@ def my_interests(request):
     ])
 
     return Response({"interest_ids": interest_ids})
+
+@api_view(["GET"])
+def similar_events(request, id):
+    events = get_similar_events(id, top_n=6)
+    serializer = EventSerializer(events, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def recommended_events(request):
+    events = get_recommendations_for_user(request.user, top_n=10)
+    serializer = EventSerializer(events, many=True)
+    return Response(serializer.data)

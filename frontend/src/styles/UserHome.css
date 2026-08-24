@@ -57,6 +57,43 @@
     gap: 30px;
 }
 
+.recommended-section {
+    margin-bottom: 32px;
+}
+
+.recommended-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+
+    /* uljepšan scrollbar, opciono */
+    scrollbar-width: thin;
+    scrollbar-color: #cfcfe0 transparent;
+}
+
+.recommended-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.recommended-scroll::-webkit-scrollbar-thumb {
+    background: #cfcfe0;
+    border-radius: 10px;
+}
+
+.recommended-item {
+    flex: 0 0 auto;
+    width: 260px;
+    scroll-snap-align: start;
+}
+
+@media (max-width: 600px) {
+    .recommended-item {
+        width: 220px;
+    }
+}
+
 @media(max-width:1000px){
     .event-grid{
         grid-template-columns:

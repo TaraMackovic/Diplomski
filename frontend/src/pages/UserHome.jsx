@@ -107,9 +107,7 @@ function UserHome() {
 
     const recommendedIds = new Set(recommended.map((e) => e.id));
 
-    const baseEvents = showRecommended
-        ? events.filter((e) => !recommendedIds.has(e.id))
-        : events;
+    const baseEvents = events;
 
     const searchedEvents = isSearching
         ? baseEvents.filter((e) => matchesSearch(e, search))
@@ -146,15 +144,18 @@ function UserHome() {
                 </div>
 
                 {showRecommended && recommended.length > 0 && (
-                    <>
+                    <div className="recommended-section">
                         <h2 className="section-title">Preporučeno za tebe</h2>
-                        <div className="event-grid">
+                        <div className="recommended-scroll">
                             {recommended.map((event) => (
-                                <EventCard key={event.id} event={event} />
+                                <div className="recommended-item" key={event.id}>
+                                    <EventCard event={event} />
+                                </div>
                             ))}
                         </div>
-                    </>
+                    </div>
                 )}
+
                 <h2 className="section-title">
                     {isSearching
                         ? `Rezultati pretrage (${resultEvents.length})`
