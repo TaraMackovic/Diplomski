@@ -8,6 +8,8 @@ function AdminSidebar() {
     const links = [
         { to: "/admin/dashboard", label: "Dashboard" },
         { to: "/admin/categories", label: "Kategorije" },
+        { to: "/admin/events", label: "Događaji" },
+        { to: "/admin/users", label: "Korisnici" },
     ];
 
     const handleLogout = () => {

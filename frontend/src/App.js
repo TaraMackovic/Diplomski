@@ -17,6 +17,11 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminSidebar from "./components/AdminSidebar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminCategories from "./pages/AdminCategories";
+import AdminEvents from "./pages/AdminEvents";
+import AdminEventDetail from "./pages/AdminEventDetail";
+import AdminEventForm from "./pages/AdminEventForm";
+import AdminUsers from "./pages/AdminUsers";
+import AdminUserDetail from "./pages/AdminUserDetail";
 
 
 function AppLayout({ children }) {
@@ -162,6 +167,49 @@ function App() {
                     }
                 />
 
+                <Route
+                    path="/admin/events"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminEvents />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/events/new"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminEventForm />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/events/:id"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminEventDetail />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/events/:id/edit"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminEventForm />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
 
                 <Route
                     path="/admin/categories"
@@ -169,6 +217,28 @@ function App() {
                         <RequireAdmin>
                             <AdminLayout>
                                 <AdminCategories />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/users"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminUsers />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/users/:id"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminUserDetail />
                             </AdminLayout>
                         </RequireAdmin>
                     }
