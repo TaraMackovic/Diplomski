@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         call_command("update_event_status")
-
+        call_command("send_event_reminders")
 
         scraper_scripts = [
             "gigstix.py",

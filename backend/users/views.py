@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import UserProfile
+from .emails import send_welcome_email, send_password_reset_email
 
 from django.contrib.auth.decorators import login_required
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,7 +18,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
 from django.conf import settings
 
 @login_required
@@ -103,6 +103,8 @@ def register_api(request):
         phone_number=data.get("phone_number", ""),
         city=data.get("location", "Banja Luka"),
     )
+
+    send_welcome_email(user)
 
     refresh = RefreshToken.for_user(user)
 
@@ -233,23 +235,12 @@ def request_password_reset(request):
 
     reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
 
-    print("\n" + "=" * 70)
-    print("RESET LINK (kopiraj ovaj red direktno):")
-    print(reset_link)
-    print("=" * 70 + "\n")
-
-    send_mail(
-        subject="Reset lozinke - Događaji u Banjoj Luci",
-        message=(
-            f"Zdravo {user.username},\n\n"
-            f"Kliknite na link ispod da resetujete lozinku:\n{reset_link}\n\n"
-            f"Ako niste vi tražili reset lozinke, ignorišite ovaj email.\n"
-            f"Link ističe za 24 sata."
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-    )
+    try:
+        send_password_reset_email(user, reset_link)
+    except Exception:
+        return Response({
+            "message": "Greška pri slanju emaila. Pokušajte ponovo kasnije."
+        }, status=500)
 
     return Response({
         "message": "Ako nalog sa ovim emailom postoji, poslat je link za reset lozinke."

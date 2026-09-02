@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; padding:0; background-color:#f4f4f7; font-family: Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7; padding: 30px 0;">
+        <tr>
+            <td align="center">
+                <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden;">
+                    <tr>
+                        <td style="background:#6c3ce9; padding:24px; text-align:center;">
+                            <h1 style="color:#ffffff; margin:0; font-size:22px;">Podsjetnik za događaj</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;">
+                            <h2 style="color:#222; margin-top:0;">Zdravo, {{ username }}!</h2>
+                            <p style="color:#555; line-height:1.6;">
+                                Podsjećamo vas da se sačuvani događaj
+                                <strong>{{ event.title }}</strong> održava za 3 dana.
+                            </p>
+                            <p style="color:#555; line-height:1.6;">
+                                📅 {{ event.date|date:"d.m.Y. H:i" }}<br>
+                                📍 {{ event.location }}
+                            </p>
+                            <div style="text-align:center; margin: 28px 0;">
+                                <a href="{{ frontend_url }}/events/{{ event.id }}"
+                                   style="background:#6c3ce9; color:#ffffff; text-decoration:none;
+                                          padding:12px 28px; border-radius:6px; font-weight:bold;">
+                                    Pogledaj događaj
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
