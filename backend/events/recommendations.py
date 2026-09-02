@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from events.models import Event, SavedEvent, UserInterest
 
-CACHE_DIR = os.path.join(settings.BASE_DIR, "backend", "events", "ml_cache")
+CACHE_DIR = os.path.join(settings.BASE_DIR, "events", "ml_cache")
 MATRIX_PATH = os.path.join(CACHE_DIR, "tfidf_matrix.pkl")
 VECTORIZER_PATH = os.path.join(CACHE_DIR, "vectorizer.pkl")
 INDICES_PATH = os.path.join(CACHE_DIR, "indices.pkl")
