@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "../styles/AdminPanel.css";
@@ -14,12 +14,15 @@ function AdminEventForm() {
     const { id } = useParams();
     const isEdit = !!id;
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
 
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(isEdit);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
-    const [imageError, setImageError] = useState(false);
+
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState("");
 
     const [form, setForm] = useState({
         title: "",
@@ -30,7 +33,6 @@ function AdminEventForm() {
         location: "",
         latitude: "",
         longitude: "",
-        image: "",
         price: "0",
         status: "active",
         tags: "",
@@ -64,12 +66,12 @@ function AdminEventForm() {
                 location: e.location,
                 latitude: e.latitude ?? "",
                 longitude: e.longitude ?? "",
-                image: e.image || "",
                 price: e.price,
                 status: e.status,
                 tags: e.tags || "",
             });
-            setImageError(false);
+            setImageFile(null);
+            setImagePreview(e.image || "");
         } catch (err) {
             console.log(err);
             setError("Ne mogu da učitam događaj.");
@@ -81,6 +83,22 @@ function AdminEventForm() {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+
+    const handleChooseImageClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        setImagePreview("");
     };
 
     const validate = () => {
@@ -107,27 +125,43 @@ function AdminEventForm() {
             return;
         }
 
-        const payload = {
-            ...form,
-            category: form.category || null,
-            latitude: form.latitude || null,
-            longitude: form.longitude || null,
-            price: form.price || 0,
-        };
+        const data = new FormData();
+        data.append("title", form.title);
+        data.append("description", form.description);
+        data.append("date", form.date);
+        data.append("time_known", form.time_known);
+        data.append("location", form.location);
+        data.append("price", form.price || 0);
+        data.append("status", form.status);
+        data.append("tags", form.tags);
+
+        // Ova tri polja saljemo SAMO ako imaju vrijednost - prazan string
+        // bi izazvao gresku validacije na backendu (ocekuje broj ili nista)
+        if (form.category) data.append("category", form.category);
+        if (form.latitude) data.append("latitude", form.latitude);
+        if (form.longitude) data.append("longitude", form.longitude);
+
+        if (imageFile) {
+            data.append("image", imageFile);
+        }
 
         try {
             setSaving(true);
             if (isEdit) {
-                await api.put(`/admin-api/events/${id}/`, payload);
+                await api.put(`/admin-api/events/${id}/`, data, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
             } else {
-                await api.post("/admin-api/events/", payload);
+                await api.post("/admin-api/events/", data, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
             }
             navigate("/admin/events");
         } catch (err) {
             console.log(err);
-            const data = err.response?.data;
-            if (data && typeof data === "object") {
-                const firstError = Object.values(data)[0];
+            const responseData = err.response?.data;
+            if (responseData && typeof responseData === "object") {
+                const firstError = Object.values(responseData)[0];
                 setError(Array.isArray(firstError) ? firstError[0] : String(firstError));
             } else {
                 setError("Greška prilikom čuvanja događaja.");
@@ -219,46 +253,56 @@ function AdminEventForm() {
                 </div>
 
                 <div className="admin-photo-field">
-                    <label>URL slike</label>
+                    <label>Slika događaja</label>
+
+                    <div className="admin-photo-box" onClick={handleChooseImageClick}>
+                        {imagePreview ? (
+                            <img
+                                src={imagePreview}
+                                alt="Pregled slike"
+                                className="admin-photo-box-preview"
+                            />
+                        ) : (
+                            <svg
+                                className="admin-photo-box-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
+                                <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
+                                <path
+                                    d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
+                                    stroke="#9aa0b4"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        )}
+
+                        <button
+                            type="button"
+                            className="admin-photo-box-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleChooseImageClick();
+                            }}
+                        >
+                            Izaberite sliku
+                        </button>
+                    </div>
 
                     <input
-                        name="image"
-                        placeholder="https://..."
-                        value={form.image}
-                        onChange={(e) => {
-                            handleChange(e);
-                            setImageError(false);
-                        }}
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="admin-photo-input-hidden"
                     />
 
-                    <div className="admin-photo-row">
-                        <div className="admin-photo-preview">
-                            {form.image && !imageError ? (
-                                <img
-                                    src={form.image}
-                                    alt="Pregled slike"
-                                    onError={() => setImageError(true)}
-                                    onLoad={() => setImageError(false)}
-                                />
-                            ) : (
-                                <div className="admin-photo-placeholder">
-                                    {form.image ? "Slika se ne može učitati" : "Nema slike"}
-                                </div>
-                            )}
-                        </div>
-
-                        {form.image && (
-                            <button
-                                type="button"
-                                className="admin-btn admin-btn-outline admin-btn-small"
-                                onClick={() => setForm({ ...form, image: "" })}
-                            >
-                                Ukloni sliku
-                            </button>
-                        )}
-                    </div>
+                   
                 </div>
-
 
                 <label>
                     Tagovi (odvojeni zarezom)
