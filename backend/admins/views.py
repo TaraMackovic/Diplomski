@@ -6,10 +6,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from events.models import Event, Category, SavedEvent
+from events.models import Event, Category, SavedEvent, Interest, UserInterest
 
 from .permissions import IsAdminUser
-from .serializers import AdminEventSerializer, AdminCategorySerializer
+from .serializers import AdminEventSerializer, AdminCategorySerializer, AdminInterestSerializer
 
 
 def paginate(queryset, request, default_size=20):
@@ -91,6 +91,72 @@ def dashboard_stats(request):
         "popular_events": popular_events,
         "popular_categories": popular_categories,
     })
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAdminUser])
+def admin_interests(request):
+    if request.method == "GET":
+        interests = Interest.objects.annotate(user_count=Count("users", distinct=True)).order_by("name")
+        serializer = AdminInterestSerializer(interests, many=True)
+
+        return Response(serializer.data)
+
+    serializer = AdminInterestSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+
+    return Response(serializer.errors, status=400)
+
+
+@api_view(["PUT", "DELETE"])
+@permission_classes([IsAdminUser])
+def admin_interest_detail(request, id):
+    interest = get_object_or_404(Interest, id=id)
+
+    if request.method == "PUT":
+        serializer = AdminInterestSerializer(
+            interest,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+
+    user_count = UserInterest.objects.filter(
+        interest=interest
+    ).count()
+
+    if user_count > 0:
+        return Response({
+            "message": (
+                f'Interesovanje "{interest.name}" koristi {user_count} '
+                f'{"korisnik" if user_count == 1 else "korisnika"}.'
+            ),
+            "user_count": user_count,
+            "can_delete": False,
+        }, status=400)
+
+    interest.delete()
+
+    return Response(status=204)
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def admin_remove_interest_from_users(request, id):
+    interest = get_object_or_404(Interest, id=id)
+
+    UserInterest.objects.filter(
+        interest=interest
+    ).delete()
+
+    interest.delete()
+
+    return Response(status=204)
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAdminUser])

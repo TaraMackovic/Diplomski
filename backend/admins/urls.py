@@ -6,6 +6,10 @@ urlpatterns = [
     path("admin-api/categories/", views.admin_categories),
     path("admin-api/categories/<int:id>/", views.admin_category_detail),
 
+    path("admin-api/interests/", views.admin_interests),
+    path("admin-api/interests/<int:id>/", views.admin_interest_detail),
+    path("admin-api/interests/<int:id>/remove-from-users/",views.admin_remove_interest_from_users),
+
     path("admin-api/events/", views.admin_events),
     path("admin-api/events/<int:id>/", views.admin_event_detail),
 

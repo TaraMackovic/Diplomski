@@ -135,8 +135,6 @@ function AdminEventForm() {
         data.append("status", form.status);
         data.append("tags", form.tags);
 
-        // Ova tri polja saljemo SAMO ako imaju vrijednost - prazan string
-        // bi izazvao gresku validacije na backendu (ocekuje broj ili nista)
         if (form.category) data.append("category", form.category);
         if (form.latitude) data.append("latitude", form.latitude);
         if (form.longitude) data.append("longitude", form.longitude);

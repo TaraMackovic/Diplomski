@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from events.models import Event, Category
+from events.models import Event, Category, Interest
 from events.serializers import EventSourceSerializer
 
 
@@ -33,3 +33,10 @@ class AdminCategorySerializer(serializers.ModelSerializer):
         if hasattr(obj, "event_count"):
             return obj.event_count
         return obj.events.count()
+
+class AdminInterestSerializer(serializers.ModelSerializer):
+    user_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Interest
+        fields = ["id", "name", "slug", "keywords", "user_count"]
