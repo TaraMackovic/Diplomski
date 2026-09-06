@@ -116,7 +116,7 @@ def register_api(request):
     })
 
 
-def serialize_profile(user, profile):
+def serialize_profile(request, user, profile):
     return {
         "id": user.id,
         "username": user.username,
@@ -125,7 +125,7 @@ def serialize_profile(user, profile):
         "last_name": profile.last_name,
         "phone_number": profile.phone_number,
         "city": profile.city,
-        "profile_image": profile.profile_image,
+        "profile_image": profile.profile_image.url if profile.profile_image else None,
         "email_notifications": profile.email_notifications,
         "created_at": profile.created_at,
     }
@@ -150,22 +150,34 @@ def profile_api(request, id):
         return Response({"message": "Profil ne postoji."}, status=404)
 
     if request.method == "GET":
-        return Response(serialize_profile(user, profile))
+        return Response(serialize_profile(request, user, profile))
 
     data = request.data
+
+    new_username = data.get("username")
+    if new_username and new_username != user.username:
+        if User.objects.filter(username=new_username).exclude(id=user.id).exists():
+            return Response(
+                {"message": "Korisničko ime već postoji."},
+                status=400
+            )
+        user.username = new_username
+        user.save()
 
     profile.first_name = data.get("first_name", profile.first_name)
     profile.last_name = data.get("last_name", profile.last_name)
     profile.phone_number = data.get("phone_number", profile.phone_number)
     profile.city = data.get("city", profile.city)
-    profile.profile_image = data.get("profile_image", profile.profile_image)
+
+    if "profile_image" in data and data.get("profile_image"):
+        profile.profile_image = data.get("profile_image")
 
     if "email_notifications" in data:
         profile.email_notifications = data.get("email_notifications")
 
     profile.save()
 
-    return Response(serialize_profile(user, profile))
+    return Response(serialize_profile(request, user, profile))
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

@@ -317,6 +317,55 @@
     padding: 10px 12px;
 }
 
+.admin-photo-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-photo-field > input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-photo-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.admin-photo-preview {
+    width: 250px;
+    height: 170px;
+    flex-shrink: 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f8f8;
+}
+
+.admin-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-photo-placeholder {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    padding: 8px;
+}
+
+.admin-btn-small {
+    align-self: flex-start;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
 @media (max-width: 900px) {
     .admin-shell {
         flex-direction: column;

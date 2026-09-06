@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { getCurrentUserId } from "../utils/auth";
@@ -7,6 +7,7 @@ import "../styles/Profile.css";
 function Profile() {
     const navigate = useNavigate();
     const userId = getCurrentUserId();
+    const fileInputRef = useRef(null);
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -16,14 +17,15 @@ function Profile() {
     const [form, setForm] = useState({
         first_name: "",
         last_name: "",
-        phone_number: "",
-        city: "",
-        profile_image: "",
     });
+
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState("");
 
     const [savedCount, setSavedCount] = useState(0);
     const [saving, setSaving] = useState(false);
     const [saveMsg, setSaveMsg] = useState("");
+    const [saveError, setSaveError] = useState(false);
 
     useEffect(() => {
         if (!userId) {
@@ -42,10 +44,11 @@ function Profile() {
             setForm({
                 first_name: response.data.first_name || "",
                 last_name: response.data.last_name || "",
-                phone_number: response.data.phone_number || "",
-                city: response.data.city || "",
-                profile_image: response.data.profile_image || "",
+                email: response.data.email || "",
+                username: response.data.username || "",
             });
+            setImageFile(null);
+            setImagePreview(response.data.profile_image || "");
         } catch (err) {
             console.log(err);
             setError("Ne mogu da učitam profil.");
@@ -67,17 +70,44 @@ function Profile() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSave = async () => {
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+
+    const handleChooseImageClick = () => {
+        fileInputRef.current?.click();
+    };
+
+   const handleSave = async () => {
         try {
             setSaving(true);
-            setSaveMsg("");
-            const response = await api.put(`/profile/${userId}/`, form);
+            setSaveError(false);
+            setSaveMsg("Profil je uspješno ažuriran.");
+
+            const data = new FormData();
+            data.append("first_name", form.first_name);
+            data.append("last_name", form.last_name);
+            data.append("username", form.username);
+            if (imageFile) {
+                data.append("profile_image", imageFile);
+            }
+
+            const response = await api.put(`/profile/${userId}/`, data, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
             setProfile(response.data);
+            setImageFile(null);
+            setImagePreview(response.data.profile_image || "");
             setEditing(false);
             setSaveMsg("Profil je uspješno ažuriran.");
         } catch (err) {
             console.log(err);
-            setSaveMsg("Greška pri čuvanju profila.");
+            const backendMsg = err.response?.data?.message;
+            setSaveError(true);
+            setSaveMsg(backendMsg || "Greška pri čuvanju profila.");
         } finally {
             setSaving(false);
         }
@@ -87,10 +117,9 @@ function Profile() {
         setForm({
             first_name: profile.first_name || "",
             last_name: profile.last_name || "",
-            phone_number: profile.phone_number || "",
-            city: profile.city || "",
-            profile_image: profile.profile_image || "",
         });
+        setImageFile(null);
+        setImagePreview(profile.profile_image || "");
         setEditing(false);
         setSaveMsg("");
     };
@@ -111,8 +140,8 @@ function Profile() {
         <div className="profile-page">
             <div className="profile-header-card">
                 <div className="profile-avatar">
-                    {profile.profile_image ? (
-                        <img src={profile.profile_image} alt="avatar" />
+                    {imagePreview ? (
+                        <img src={imagePreview} alt="avatar" />
                     ) : (
                         <span>{initials || "?"}</span>
                     )}
@@ -162,12 +191,12 @@ function Profile() {
                             <span className="info-value">{profile.last_name || "—"}</span>
                         </div>
                         <div className="info-row">
-                            <span className="info-label">Telefon</span>
-                            <span className="info-value">{profile.phone_number || "—"}</span>
+                            <span className="info-label">Username</span>
+                            <span className="info-value">{profile.username || "—"}</span>
                         </div>
                         <div className="info-row">
-                            <span className="info-label">Email</span>
-                            <span className="info-value">{profile.email}</span>
+                            <span className="info-label">E-mail</span>
+                            <span className="info-value">{profile.email || "—"}</span>
                         </div>
                     </div>
                 ) : (
@@ -191,25 +220,60 @@ function Profile() {
                         </label>
 
                         <label>
-                            Telefon
+                            Username
                             <input
-                                name="phone_number"
-                                value={form.phone_number}
+                                name="username"
+                                value={form.username}
                                 onChange={handleChange}
                             />
                         </label>
 
-
-                        <label>
-                            URL profilne slike
+                        <div className="image-upload-field">
+                            <span className="image-upload-label">Profilna slika</span>
+                            <div className="image-upload-box" onClick={handleChooseImageClick}>
+                                {imagePreview ? (
+                                    <img
+                                        src={imagePreview}
+                                        alt="Pregled slike"
+                                        className="image-upload-preview"
+                                    />
+                                ) : (
+                                    <svg
+                                        className="image-upload-icon"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
+                                        <path
+                                            d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
+                                            stroke="#9aa0b4"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                )}
+                                <button
+                                    type="button"
+                                    className="image-upload-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleChooseImageClick();
+                                    }}
+                                >
+                                    Izaberite sliku
+                                </button>
+                            </div>
                             <input
-                                name="profile_image"
-                                value={form.profile_image}
-                                onChange={handleChange}
-                                placeholder="https://..."
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="image-upload-input-hidden"
                             />
-                        </label>
-
+                        </div>
                         <div className="form-actions">
                             <button
                                 className="save-btn"
@@ -221,17 +285,15 @@ function Profile() {
                             <button className="cancel-btn" onClick={handleCancel}>
                                 Otkaži
                             </button>
-                            
                         </div>
-                        {editing && (
-                                <p className="email-note">
-                                    Email adresa: <strong>{profile.email}</strong> (promjena emaila zahtijeva poseban proces verifikacije)
-                                </p>
-                            )}
                     </div>
                 )}
 
-                {saveMsg && <p className="save-msg">{saveMsg}</p>}
+                {saveMsg && (
+                    <p className={saveError ? "save-msg save-msg-error" : "save-msg"}>
+                        {saveMsg}
+                    </p>
+                )}
             </div>
         </div>
     );

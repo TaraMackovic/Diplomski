@@ -23,7 +23,8 @@ class UserProfile(models.Model):
         default="Banja Luka"
     )
 
-    profile_image = models.URLField(
+    profile_image = models.ImageField(
+        upload_to="profile_images/",
         blank=True,
         null=True
     )

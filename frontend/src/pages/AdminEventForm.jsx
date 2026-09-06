@@ -19,6 +19,7 @@ function AdminEventForm() {
     const [loading, setLoading] = useState(isEdit);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+    const [imageError, setImageError] = useState(false);
 
     const [form, setForm] = useState({
         title: "",
@@ -68,6 +69,7 @@ function AdminEventForm() {
                 status: e.status,
                 tags: e.tags || "",
             });
+            setImageError(false);
         } catch (err) {
             console.log(err);
             setError("Ne mogu da učitam događaj.");
@@ -216,10 +218,47 @@ function AdminEventForm() {
                     </div>
                 </div>
 
-                <label>
-                    URL slike
-                    <input name="image" placeholder="https://..." value={form.image} onChange={handleChange} />
-                </label>
+                <div className="admin-photo-field">
+                    <label>URL slike</label>
+
+                    <input
+                        name="image"
+                        placeholder="https://..."
+                        value={form.image}
+                        onChange={(e) => {
+                            handleChange(e);
+                            setImageError(false);
+                        }}
+                    />
+
+                    <div className="admin-photo-row">
+                        <div className="admin-photo-preview">
+                            {form.image && !imageError ? (
+                                <img
+                                    src={form.image}
+                                    alt="Pregled slike"
+                                    onError={() => setImageError(true)}
+                                    onLoad={() => setImageError(false)}
+                                />
+                            ) : (
+                                <div className="admin-photo-placeholder">
+                                    {form.image ? "Slika se ne može učitati" : "Nema slike"}
+                                </div>
+                            )}
+                        </div>
+
+                        {form.image && (
+                            <button
+                                type="button"
+                                className="admin-btn admin-btn-outline admin-btn-small"
+                                onClick={() => setForm({ ...form, image: "" })}
+                            >
+                                Ukloni sliku
+                            </button>
+                        )}
+                    </div>
+                </div>
+
 
                 <label>
                     Tagovi (odvojeni zarezom)

@@ -20,6 +20,29 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@dogadjajiubanjaluci.com")
 
+AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_S3_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_S3_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("SUPABASE_S3_BUCKET_NAME")
+AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")
+AWS_S3_REGION_NAME = os.getenv("SUPABASE_S3_REGION")
+AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
+AWS_S3_URL_PROTOCOL = os.getenv("AWS_S3_URL_PROTOCOL", "https:")
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+MEDIA_URL = f"{os.getenv('SUPABASE_PROJECT_URL')}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
+
 FRONTEND_URL = "http://localhost:3000"
 
 ALLOWED_HOSTS = []
@@ -34,6 +57,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',  
+    'storages',
 
     'events',
     'users',
