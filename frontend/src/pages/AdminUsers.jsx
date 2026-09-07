@@ -29,6 +29,31 @@ function AdminUsers() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleteError, setDeleteError] = useState("");
 
+    const [creating, setCreating] = useState(false);
+    const [createForm, setCreateForm] = useState({
+        first_name: "",
+        last_name: "",
+        username: "",
+        email: "",
+        password: "",
+        role: "user",
+    });
+    const [createError, setCreateError] = useState("");
+    const [createSaving, setCreateSaving] = useState(false);
+
+    const openCreate = () => {
+        setCreating(true);
+        setCreateForm({
+            first_name: "",
+            last_name: "",
+            username: "",
+            email: "",
+            password: "",
+            role: "user",
+        });
+        setCreateError("");
+    };
+
     useEffect(() => {
         loadUsers();
     }, [search, statusFilter, roleFilter, ordering, page]);
@@ -103,11 +128,90 @@ function AdminUsers() {
         }
     };
 
+    const handleCreateChange = (e) => {
+        setCreateForm({ ...createForm, [e.target.name]: e.target.value });
+    };
+
+    const handleCreateUser = async () => {
+        const validationError = validateCreateForm();
+        if (validationError) {
+            setCreateError(validationError);
+            return;
+        }
+
+        try {
+            setCreateSaving(true);
+            setCreateError("");
+
+            await api.post("/admin-api/users/", {
+                first_name: createForm.first_name,
+                last_name: createForm.last_name,
+                username: createForm.username,
+                email: createForm.email,
+                password: createForm.password,
+                is_staff: createForm.role === "admin",
+            });
+
+            setCreating(false);
+            loadUsers();
+        } catch (err) {
+            console.log(err);
+
+            const data = err.response?.data;
+
+            if (data?.message) {
+                setCreateError(data.message);
+            } else if (data && typeof data === "object") {
+                const firstField = Object.keys(data)[0];
+                const firstMsg = Array.isArray(data[firstField]) ? data[firstField][0] : data[firstField];
+                setCreateError(firstMsg || "Greška prilikom kreiranja korisnika.");
+            } else {
+                setCreateError("Greška prilikom kreiranja korisnika.");
+            }
+        } finally {
+            setCreateSaving(false);
+        }
+    };
+
+    const validateCreateForm = () => {
+        if (!createForm.first_name.trim() || !createForm.last_name.trim()) {
+            return "Ime i prezime su obavezni.";
+        }
+
+        if (!createForm.username.trim()) {
+            return "Korisničko ime je obavezno.";
+        }
+
+        if (createForm.username.length < 3) {
+            return "Korisničko ime mora imati najmanje 3 karaktera.";
+        }
+
+        if (!createForm.email.trim()) {
+            return "Email je obavezan.";
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(createForm.email)) {
+            return "Unesite ispravnu email adresu.";
+        }
+
+        if (!createForm.password) {
+            return "Lozinka je obavezna.";
+        }
+
+        if (createForm.password.length < 8) {
+            return "Lozinka mora imati najmanje 8 karaktera.";
+        }
+
+        return "";
+    };
+
     return (
         <div>
             <h1 className="admin-page-title">Korisnici</h1>
 
             <div className="admin-toolbar">
+                <button className="admin-btn" onClick={openCreate}>+ Novi korisnik</button>
                 <input
                     className="admin-search"
                     placeholder="Pretraži po imenu, username-u ili emailu..."
@@ -250,6 +354,47 @@ function AdminUsers() {
                     onCancel={() => setStaffTarget(null)}
                     extraError={staffError}
                     confirmLabel="Potvrdi"
+                />
+            )}
+            {creating && (
+                <Confirmation
+                    title="Novi korisnik"
+                    danger={false}
+                    confirmLabel={createSaving ? "Kreiranje..." : "Kreiraj korisnika"}
+                    onConfirm={handleCreateUser}
+                    onCancel={() => setCreating(false)}
+                    extraError={createError}
+                    message={
+                        <div className="profile-edit-form">
+                            <label>
+                                Ime
+                                <input name="first_name" value={createForm.first_name} onChange={handleCreateChange} />
+                            </label>
+                            <label>
+                                Prezime
+                                <input name="last_name" value={createForm.last_name} onChange={handleCreateChange} />
+                            </label>
+                            <label>
+                                Username
+                                <input name="username" value={createForm.username} onChange={handleCreateChange} />
+                            </label>
+                            <label>
+                                Email
+                                <input name="email" type="email" value={createForm.email} onChange={handleCreateChange} />
+                            </label>
+                            <label>
+                                Lozinka
+                                <input name="password" type="password" value={createForm.password} onChange={handleCreateChange} />
+                            </label>
+                            <label>
+                                Uloga
+                                <select name="role" value={createForm.role} onChange={handleCreateChange}>
+                                    <option value="user">Korisnik</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </label>
+                        </div>
+                    }
                 />
             )}
         </div>

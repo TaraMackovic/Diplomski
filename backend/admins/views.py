@@ -7,10 +7,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from events.models import Event, Category, SavedEvent, Interest, UserInterest
+from users.models import UserProfile
 
 from .permissions import IsAdminUser
 from .serializers import AdminEventSerializer, AdminCategorySerializer, AdminInterestSerializer
 
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 def paginate(queryset, request, default_size=20):
     try:
@@ -39,6 +42,73 @@ def paginate(queryset, request, default_size=20):
         "total_pages": total_pages,
     }
 
+def serialize_admin_user(user, saved_count=None):
+    profile = getattr(user, "profile", None)
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": profile.first_name if profile else user.first_name,
+        "last_name": profile.last_name if profile else user.last_name,
+        "phone_number": profile.phone_number if profile else "",
+        "date_joined": user.date_joined,
+        "saved_events_count": saved_count if saved_count is not None else user.saved_events.count(),
+        "is_active": user.is_active,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+    }
+
+def create_admin_user(request):
+    data = request.data
+
+    username = (data.get("username") or "").strip()
+    email = (data.get("email") or "").strip()
+    password = data.get("password") or ""
+    first_name = (data.get("first_name") or "").strip()
+    last_name = (data.get("last_name") or "").strip()
+    is_staff = bool(data.get("is_staff", False))
+
+    errors = {}
+    if not username:
+        errors["username"] = ["Username je obavezan."]
+    elif User.objects.filter(username=username).exists():
+        errors["username"] = ["Korisničko ime već postoji."]
+
+    if not email:
+        errors["email"] = ["Email je obavezan."]
+    elif User.objects.filter(email=email).exists():
+        errors["email"] = ["Email je već u upotrebi."]
+
+    if not password:
+        errors["password"] = ["Lozinka je obavezna."]
+    else:
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            errors["password"] = list(e.messages)
+
+    if errors:
+        return Response(errors, status=400)
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        is_staff=is_staff,
+    )
+
+    UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            "first_name": first_name,
+            "last_name": last_name,
+        },
+    )
+
+    return Response(serialize_admin_user(user), status=201)
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
@@ -193,25 +263,6 @@ def admin_category_detail(request, id):
     category.delete()
     return Response(status=204)
 
-
-def serialize_admin_user(user, saved_count=None):
-    profile = getattr(user, "profile", None)
-
-    return {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "first_name": profile.first_name if profile else user.first_name,
-        "last_name": profile.last_name if profile else user.last_name,
-        "phone_number": profile.phone_number if profile else "",
-        "date_joined": user.date_joined,
-        "saved_events_count": saved_count if saved_count is not None else user.saved_events.count(),
-        "is_active": user.is_active,
-        "is_staff": user.is_staff,
-        "is_superuser": user.is_superuser,
-    }
-
-
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_analytics(request):
@@ -321,9 +372,12 @@ def admin_event_detail(request, id):
 
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 @permission_classes([IsAdminUser])
 def admin_users(request):
+    if request.method == "POST":
+        return create_admin_user(request)
+
     users = User.objects.select_related("profile").annotate(
         saved_events_count=Count("saved_events", distinct=True)
     ).order_by("-date_joined")

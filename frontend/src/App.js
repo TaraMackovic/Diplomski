@@ -23,6 +23,8 @@ import AdminEventForm from "./pages/AdminEventForm";
 import AdminUsers from "./pages/AdminUsers";
 import AdminUserDetail from "./pages/AdminUserDetail";
 import AdminInterests from "./pages/AdminInterests";
+import AdminProfile from "./pages/AdminProfile";
+import AdminSettings from "./pages/AdminSettings";
 
 
 function AppLayout({ children }) {
@@ -252,6 +254,28 @@ function App() {
                         <RequireAdmin>
                             <AdminLayout>
                                 <AdminUserDetail />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/profile"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminProfile />
+                            </AdminLayout>
+                        </RequireAdmin>
+                    }
+                />
+
+                <Route
+                    path="/admin/settings"
+                    element={
+                        <RequireAdmin>
+                            <AdminLayout>
+                                <AdminSettings />
                             </AdminLayout>
                         </RequireAdmin>
                     }

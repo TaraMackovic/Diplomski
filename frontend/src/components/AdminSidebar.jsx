@@ -7,17 +7,13 @@ function AdminSidebar() {
 
     const links = [
         { to: "/admin/dashboard", label: "Dashboard" },
+        { to: "/admin/users", label: "Korisnici" },
+        { to: "/admin/events", label: "Događaji" },
         { to: "/admin/categories", label: "Kategorije" },
         { to: "/admin/interests", label: "Interesovanja" },
-        { to: "/admin/events", label: "Događaji" },
-        { to: "/admin/users", label: "Korisnici" },
+        { to: "/admin/profile", label: "Moj profil" },
+        { to: "/admin/settings", label: "Podešavanja" },
     ];
-
-    const handleLogout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        navigate("/login");
-    };
 
     return (
         <nav className="admin-sidebar">
@@ -31,9 +27,6 @@ function AdminSidebar() {
                     {label}
                 </NavLink>
             ))}
-            <button className="admin-link admin-back" onClick={handleLogout}>
-                ← Odjavi se
-            </button>
             
         </nav>
     );

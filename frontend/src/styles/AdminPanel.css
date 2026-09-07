@@ -379,6 +379,38 @@
     display: none;
 }
 
+
+.logout-zone h3 {
+    color: #b23b3b;
+}
+
+.logout-btn {
+    display: block;
+    width: 100%;
+    background: #f0f0f0;
+    color: #1a1a2e;
+    border: none;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.delete-btn {
+    display: block;
+    width: 100%;
+    background: #fdecec;
+    color: #b23b3b;
+    border: none;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 @media (max-width: 900px) {
     .admin-shell {
         flex-direction: column;
