@@ -5,8 +5,9 @@ from pathlib import Path
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  
-SCRAPERS_DIR = BASE_DIR / "data\\scrapers"
+BASE_DIR = Path(__file__).resolve().parents[3]
+SCRAPERS_DIR = BASE_DIR / "scrapers"
+DATA_DIR = BASE_DIR / "data"
 
 
 class Command(BaseCommand):
@@ -35,21 +36,16 @@ class Command(BaseCommand):
                 return
             self.stdout.write(self.style.SUCCESS(f"{script} gotovo."))
 
-      
-        self.stdout.write("merge_events.py...")
-        result = subprocess.run(
-            [sys.executable, str(SCRAPERS_DIR / "merge_events.py")],
-            cwd=SCRAPERS_DIR,
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
-            self.stderr.write(self.style.ERROR(f"Merge greška:\n{result.stderr}"))
+        self.stdout.write("Pokrećem merge...")
+        try:
+            call_command("merge_events")
+        except Exception as exc:
+            self.stderr.write(
+                self.style.ERROR(f"Merge greška: {exc}")
+            )
             return
-        self.stdout.write(result.stdout)
 
-       
-        merged_path = SCRAPERS_DIR / "merged_events.json"
+        merged_path = DATA_DIR / "merged_events.json"
         call_command("import_events", str(merged_path))
         
 
