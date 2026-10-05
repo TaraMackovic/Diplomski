@@ -41,14 +41,15 @@ function AdminEventDetail() {
         ["Lokacija", event.location],
         ["Latitude", event.latitude ?? "—"],
         ["Longitude", event.longitude ?? "—"],
-        ["Datum", new Date(event.date).toLocaleString("sr-RS")],
+        ["Početak", new Date(event.start_date).toLocaleString("sr-Latn-RS")],
+        ["Kraj", event.end_date ? new Date(event.end_date).toLocaleString("sr-Latn-RS") : "—"],
         ["Vrijeme poznato", event.time_known ? "Da" : "Ne"],
         ["Cijena", `${event.price} KM`],
         ["Status", STATUS_LABELS[event.status] || event.status],
         ["Tagovi", event.tags || "—"],
         ["Sačuvano puta", event.saved_count],
-        ["Kreiran", new Date(event.created_at).toLocaleString("sr-RS")],
-        ["Izmijenjen", new Date(event.updated_at).toLocaleString("sr-RS")],
+        ["Kreiran", new Date(event.created_at).toLocaleString("sr-Latn-RS")],
+        ["Izmijenjen", new Date(event.updated_at).toLocaleString("sr-Latn-RS")],
     ];
 
     return (

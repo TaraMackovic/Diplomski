@@ -28,7 +28,8 @@ function AdminEventForm() {
         title: "",
         description: "",
         category: "",
-        date: "",
+        start_date: "",
+        end_date: "",
         time_known: true,
         location: "",
         latitude: "",
@@ -61,7 +62,8 @@ function AdminEventForm() {
                 title: e.title,
                 description: e.description || "",
                 category: e.category || "",
-                date: toDatetimeLocal(e.date),
+                start_date: toDatetimeLocal(e.start_date),
+                end_date: toDatetimeLocal(e.end_date),
                 time_known: e.time_known,
                 location: e.location,
                 latitude: e.latitude ?? "",
@@ -104,7 +106,8 @@ function AdminEventForm() {
     const validate = () => {
         if (!form.title.trim()) return "Naslov je obavezan.";
         if (!form.location.trim()) return "Lokacija je obavezna.";
-        if (!form.date) return "Datum je obavezan.";
+        if (!form.start_date) return "Datum početka je obavezan.";
+        if (form.end_date && form.end_date < form.start_date) return "Kraj ne može biti prije početka.";
         if (form.price !== "" && Number(form.price) < 0) return "Cijena ne može biti negativna.";
         if (form.latitude && (Number(form.latitude) < -90 || Number(form.latitude) > 90)) {
             return "Latitude mora biti između -90 i 90.";
@@ -128,7 +131,8 @@ function AdminEventForm() {
         const data = new FormData();
         data.append("title", form.title);
         data.append("description", form.description);
-        data.append("date", form.date);
+        data.append("start_date", form.start_date);
+        data.append("end_date", form.end_date);
         data.append("time_known", form.time_known);
         data.append("location", form.location);
         data.append("price", form.price || 0);
@@ -199,6 +203,15 @@ function AdminEventForm() {
                         </label>
                     </div>
                     <div>
+                        
+                        <label>Početak događaja
+                            <input type="datetime-local" name="start_date" value={form.start_date} onChange={handleChange} />
+                        </label>
+                    </div>
+                </div>
+
+                <div className="admin-form-row">
+                    <div>       
                         <label>
                             Status
                             <select name="status" value={form.status} onChange={handleChange}>
@@ -207,20 +220,15 @@ function AdminEventForm() {
                                 <option value="finished">Završen</option>
                             </select>
                         </label>
-                    </div>
-                </div>
-
-                <div className="admin-form-row">
-                    <div>
-                        <label>
-                            Datum i vrijeme
-                            <input type="datetime-local" name="date" value={form.date} onChange={handleChange} />
+                        <label className="price-field">
+                            Cijena (KM)
+                            <input type="number" min="0" step="0.01" name="price" value={form.price} onChange={handleChange} />
                         </label>
                     </div>
                     <div>
-                        <label>
-                            Cijena (KM)
-                            <input type="number" min="0" step="0.01" name="price" value={form.price} onChange={handleChange} />
+                        
+                        <label>Kraj događaja
+                            <input type="datetime-local" name="end_date" min={form.start_date} value={form.end_date} onChange={handleChange} />
                         </label>
                     </div>
                 </div>

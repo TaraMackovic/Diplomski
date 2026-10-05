@@ -87,7 +87,7 @@
 }
 
 .admin-stat-label {
-    font-size: 13px;
+    font-size: 14px;
     color: #888;
     margin-top: 4px;
 }
@@ -107,7 +107,7 @@
     border-radius: 14px;
     border: 1.5px solid #e4e4ef;
     padding: 0 16px;
-    font-size: 14px;
+    font-size: 15px;
     background: #fff;
 }
 
@@ -116,7 +116,7 @@
     border-radius: 14px;
     border: 1.5px solid #e4e4ef;
     padding: 0 14px;
-    font-size: 14px;
+    font-size: 15px;
     background: #fff;
     color: #2c2c56;
 }
@@ -128,7 +128,7 @@
     border-radius: 14px;
     background: #37388e;
     color: #fff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(55, 56, 142, 0.28);
@@ -159,7 +159,7 @@
     width: 100%;
     min-width: 1000px;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
     table-layout: auto;
 }
 
@@ -168,7 +168,7 @@
     padding: 11px 10px;
     color: #888;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 12px;
     text-transform: uppercase;
     border-bottom: 1px solid #ececf5;
     white-space: nowrap;
@@ -181,7 +181,46 @@
     white-space: nowrap;
 }
 
-.admin-table tr:last-child td {
+.admin-table-wrapper-small {
+    width: fit-content;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #ececf5;
+    box-shadow: 0 8px 20px rgba(52, 52, 93, 0.06);
+    overflow-x: auto;
+}
+
+.admin-table-small {
+    width: fit-content;
+    min-width: 0;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: auto;
+}
+
+.admin-table-small th
+ {
+    text-align: left;
+    padding: 10px 70px 10px 10px;
+    color: #888;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ececf5;
+    white-space: nowrap;
+}
+
+.admin-table-small td {
+    padding: 10px 70px 10px 10px;
+    color: #2c2c56;
+    border-bottom: 1px solid #f2f2f7;
+    white-space: nowrap;
+}
+
+
+.admin-table tr:last-child td,
+.admin-table-small tr:last-child td {
     border-bottom: none;
 }
 
@@ -202,7 +241,7 @@
 
 .admin-row-actions {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     flex-wrap: nowrap;
 }
 
@@ -237,7 +276,11 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-width: 700px;
+    max-width: 1000px;
+}
+
+.price-field {
+    margin-top: 16px;
 }
 
 .admin-form-row {
@@ -250,8 +293,8 @@
 }
 
 .admin-form label {
-    font-size: 13px;
-    color: #666;
+    font-size: 16px;
+    color: #2c2c56;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -291,7 +334,7 @@
     background: #fdecec;
     border-radius: 10px;
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .admin-dashboard-tables {
@@ -302,19 +345,33 @@
     align-items: start;
 }
 
-.admin-dashboard-tables .admin-table-wrapper {
+.admin-dashboard-tables .admin-table-wrapper,
+.admin-dashboard-tables .admin-table-wrapper-small {
     width: 100%;
     min-width: 0;
 }
 
-.admin-dashboard-tables .admin-table {
+.admin-dashboard-tables .admin-table,
+.admin-dashboard-tables .admin-table-small {
     width: 100%;
     min-width: 0;
 }
 
 .admin-dashboard-tables .admin-table th,
-.admin-dashboard-tables .admin-table td {
+.admin-dashboard-tables .admin-table td 
+.admin-dashboard-tables .admin-table-small th,
+.admin-dashboard-tables .admin-table-small td {
     padding: 10px 12px;
+}
+
+.admin-table tbody tr:nth-child(even),
+.admin-table-small tbody tr:nth-child(even){
+    background: hsla(240, 23%, 97%, 0.496);
+}
+
+.admin-table tbody tr:hover,
+.admin-table-small tbody tr:hover {
+    background: #eef0fb;
 }
 
 .admin-photo-field {
@@ -364,7 +421,7 @@
     border: 1px solid #e4e4ef;
     padding: 8px 20px;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     z-index: 1;

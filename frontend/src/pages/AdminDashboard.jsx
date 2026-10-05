@@ -35,7 +35,6 @@ function AdminDashboard() {
         { label: "Kategorije", value: stats.total_categories },
         { label: "Korisnici", value: stats.total_users },
         { label: "Završeni događaji", value: stats.past_events },
-        { label: "Otkazani događaji", value: stats.cancelled_events },
         { label: "Sačuvani događaji", value: stats.total_saved_events },
     ];
 

@@ -142,8 +142,8 @@ function AdminInterests() {
             ) : error ? (
                 <p className="admin-empty">{error}</p>
             ) : (
-                <div className="admin-table-wrapper">
-                    <table className="admin-table">
+                <div className="admin-table-wrapper-small">
+                    <table className="admin-table-small">
                         <thead>
                             <tr>
                                 <th>Naziv</th>

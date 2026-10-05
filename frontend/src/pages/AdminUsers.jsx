@@ -251,7 +251,6 @@ function AdminUsers() {
                                 <th>Username</th>
                                 <th>Ime i prezime</th>
                                 <th>Email</th>
-                                <th>Telefon</th>
                                 <th>Registrovan</th>
                                 <th>Sačuvano</th>
                                 <th>Status</th>
@@ -267,7 +266,6 @@ function AdminUsers() {
                                     <td>{u.username}</td>
                                     <td>{u.first_name} {u.last_name}</td>
                                     <td>{u.email}</td>
-                                    <td>{u.phone_number || "—"}</td>
                                     <td>{new Date(u.date_joined).toLocaleDateString("sr-RS")}</td>
                                     <td>{u.saved_events_count}</td>
                                     <td>

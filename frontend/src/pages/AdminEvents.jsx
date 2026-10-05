@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Pagination from "../components/Pagination";
 import Confirmation from "../components/Confirmation";
+import { formatEventDate } from "../utils/formatEventDate";
+
 import "../styles/AdminPanel.css";
 
 const STATUS_LABELS = {
@@ -22,7 +24,7 @@ function AdminEvents() {
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
     const [status, setStatus] = useState("");
-    const [ordering, setOrdering] = useState("-date");
+    const [ordering, setOrdering] = useState("-start_date");
 
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -104,8 +106,8 @@ function AdminEvents() {
                 </select>
 
                 <select className="admin-select" value={ordering} onChange={(e) => setOrdering(e.target.value)}>
-                    <option value="-date">Datum (najnoviji)</option>
-                    <option value="date">Datum (najstariji)</option>
+                    <option value="-start_date">Datum (najnoviji)</option>
+                    <option value="start_date">Datum (najstariji)</option>
                     <option value="title">Naziv (A-Š)</option>
                     <option value="-title">Naziv (Š-A)</option>
                     <option value="-created_at">Kreirano (najnovije)</option>
@@ -143,14 +145,14 @@ function AdminEvents() {
                                     <td>{event.title}</td>
                                     <td>{event.category_name || "—"}</td>
                                     <td>{event.location}</td>
-                                    <td>{new Date(event.date).toLocaleString("sr-RS")}</td>
+                                    <td>{formatEventDate(event.start_date, event.end_date, { timeKnown: event.time_known, locale: "sr-Latn-RS" })}</td>
                                     <td>
                                         <span className={`admin-badge badge-${event.status}`}>
                                             {STATUS_LABELS[event.status] || event.status}
                                         </span>
                                     </td>
                                     <td>{event.sources?.[0]?.source || "—"}</td>
-                                    <td>{new Date(event.created_at).toLocaleDateString("sr-RS")}</td>
+                                    <td>{new Date(event.created_at).toLocaleDateString("sr-Latn-RS")}</td>
                                     <td>
                                         <div className="admin-row-actions">
                                             <button

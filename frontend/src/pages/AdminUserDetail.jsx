@@ -33,7 +33,6 @@ function AdminUserDetail() {
         ["Ime", user.first_name || "—"],
         ["Prezime", user.last_name || "—"],
         ["Email", user.email],
-        ["Telefon", user.phone_number || "—"],
         ["Registrovan", new Date(user.date_joined).toLocaleString("sr-RS")],
         ["Sačuvani događaji", user.saved_events_count],
         ["Status", user.is_active ? "Aktivan" : "Deaktiviran"],
