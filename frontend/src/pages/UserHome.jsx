@@ -9,7 +9,7 @@ import "../styles/UserHome.css";
 
 import searchIcon from "../assets/icons/icon_search.png";
 import filterIcon from "../assets/icons/icon_filter.png";
-import guestWelcome from "../assets/icons/guest_night.png"; 
+import guestWelcome from "../assets/icons/guest_welcome.png"; 
 
 const API_URL = "http://localhost:8000";
 const EVENTS_PER_PAGE = 12;
