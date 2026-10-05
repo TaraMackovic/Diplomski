@@ -3,6 +3,8 @@ import api from "../services/api";
 import EventCard from "../components/EventCard";
 import Pagination from "../components/Pagination";
 import { mapEvent } from "../utils/mapEvent";
+import { isEventPast } from "../utils/formatEventDate";
+
 import "../styles/SavedEvents.css";
 
 const EVENTS_PER_PAGE = 12;
@@ -40,7 +42,7 @@ function SavedEvents() {
     if (error) return <h2>{error}</h2>;
 
     const filteredEvents = events.filter((event) => {
-        const isPast = new Date(event.date) < new Date();
+        const isPast = isEventPast(event);
         return timeFilter === "past" ? isPast : !isPast;
     });
 
