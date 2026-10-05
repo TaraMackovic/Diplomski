@@ -73,71 +73,73 @@ function Settings() {
 
     return (
         <div className="settings-page">
-            <h1>Podešavanja</h1>
+            <div className="settings-container">
+                <h1>Podešavanja</h1>
 
-            <div className="settings-card">
-                <h3>Obavještenja</h3>
+                <div className="settings-card">
+                    <h3>Obavještenja</h3>
 
-                <div className="settings-row">
-                    <div>
-                        <p className="settings-row-title">Email obavještenja</p>
-                        <p className="settings-row-desc">
-                            Primaj podsjetnike i preporuke novih događaja na email.
-                        </p>
+                    <div className="settings-row">
+                        <div>
+                            <p className="settings-row-title">Email obavještenja</p>
+                            <p className="settings-row-desc">
+                                Primaj podsjetnike i preporuke novih događaja na email.
+                            </p>
+                        </div>
+
+                        <label className="switch">
+                            <input
+                                type="checkbox"
+                                checked={profile?.email_notifications || false}
+                                onChange={toggleNotifications}
+                                disabled={savingNotif}
+                            />
+                            <span className="slider"></span>
+                        </label>
                     </div>
 
-                    <label className="switch">
-                        <input
-                            type="checkbox"
-                            checked={profile?.email_notifications || false}
-                            onChange={toggleNotifications}
-                            disabled={savingNotif}
-                        />
-                        <span className="slider"></span>
-                    </label>
+                    {msg && <p className="settings-msg">{msg}</p>}
                 </div>
 
-                {msg && <p className="settings-msg">{msg}</p>}
+                <div className="settings-card">
+                    <h3>Nalog</h3>
+
+                    <button className="settings-action-btn" onClick={() => navigate("/profile")}>
+                        Uredi profil
+                    </button>
+
+                    <button
+                        className="settings-action-btn"
+                        onClick={() => setShowPasswordModal(true)}
+                    >
+                        Promijeni lozinku
+                    </button>
+
+                    <button className="settings-action-btn" onClick={() => setShowInterestsModal(true)}>
+                        Lični interesi
+                    </button>
+                </div>
+
+                <div className="settings-card logout-zone">
+                    <h3>Podešavanja naloga</h3>
+
+                    <button className="logout-btn" onClick={handleLogout}>
+                        Odjavi se
+                    </button>
+
+                    <button className="delete-btn" onClick={handleDeleteAccount}>
+                        Obriši nalog
+                    </button>
+                </div>
+
+                {showPasswordModal && (
+                    <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+                )}
+
+                {showInterestsModal && (
+                    <InterestsModal onClose={() => setShowInterestsModal(false)} />
+                )}
             </div>
-
-            <div className="settings-card">
-                <h3>Nalog</h3>
-
-                <button className="settings-action-btn" onClick={() => navigate("/profile")}>
-                    Uredi profil
-                </button>
-
-                <button
-                    className="settings-action-btn"
-                    onClick={() => setShowPasswordModal(true)}
-                >
-                    Promijeni lozinku
-                </button>
-
-                <button className="settings-action-btn" onClick={() => setShowInterestsModal(true)}>
-                    Lični interesi
-                </button>
-            </div>
-
-            <div className="settings-card logout-zone">
-                <h3>Podešavanja naloga</h3>
-
-                <button className="logout-btn" onClick={handleLogout}>
-                    Odjavi se
-                </button>
-
-                <button className="delete-btn" onClick={handleDeleteAccount}>
-                    Obriši nalog
-                </button>
-            </div>
-
-            {showPasswordModal && (
-                <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
-            )}
-
-            {showInterestsModal && (
-                <InterestsModal onClose={() => setShowInterestsModal(false)} />
-            )}
         </div>
     );
 }

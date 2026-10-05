@@ -138,162 +138,164 @@ function Profile() {
 
     return (
         <div className="profile-page">
-            <div className="profile-header-card">
-                <div className="profile-avatar">
-                    {imagePreview ? (
-                        <img src={imagePreview} alt="avatar" />
-                    ) : (
-                        <span>{initials || "?"}</span>
-                    )}
-                </div>
-
-                <div className="profile-header-info">
-                    <h1>
-                        {profile.first_name} {profile.last_name}
-                    </h1>
-                    <p className="profile-username">@{profile.username}</p>
-                    {memberSince && (
-                        <p className="profile-since">Član od {memberSince}</p>
-                    )}
-                </div>
-
-                {!editing && (
-                    <button className="edit-btn" onClick={() => setEditing(true)}>
-                        Uredi profil
-                    </button>
-                )}
-            </div>
-
-            <div className="profile-stats-row">
-                <div className="stat-card">
-                    <span className="stat-number">{savedCount}</span>
-                    <span className="stat-label">Sačuvanih događaja</span>
-                </div>
-                <div className="stat-card">
-                    <span className="stat-number">
-                        {profile.email_notifications ? "Uključena" : "Isključena"}
-                    </span>
-                    <span className="stat-label">Email obavještenja</span>
-                </div>
-            </div>
-
-            <div className="profile-details-card">
-                <h3>Informacije o nalogu</h3>
-
-                {!editing ? (
-                    <div className="profile-info-list">
-                        <div className="info-row">
-                            <span className="info-label">Ime</span>
-                            <span className="info-value">{profile.first_name || "—"}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">Prezime</span>
-                            <span className="info-value">{profile.last_name || "—"}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">Username</span>
-                            <span className="info-value">{profile.username || "—"}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">E-mail</span>
-                            <span className="info-value">{profile.email || "—"}</span>
-                        </div>
+            <div className="profile-container">
+                <div className="profile-header-card">
+                    <div className="profile-avatar">
+                        {imagePreview ? (
+                            <img src={imagePreview} alt="avatar" />
+                        ) : (
+                            <span>{initials || "?"}</span>
+                        )}
                     </div>
-                ) : (
-                    <div className="profile-edit-form">
-                        <label>
-                            Ime
-                            <input
-                                name="first_name"
-                                value={form.first_name}
-                                onChange={handleChange}
-                            />
-                        </label>
 
-                        <label>
-                            Prezime
-                            <input
-                                name="last_name"
-                                value={form.last_name}
-                                onChange={handleChange}
-                            />
-                        </label>
+                    <div className="profile-header-info">
+                        <h1>
+                            {profile.first_name} {profile.last_name}
+                        </h1>
+                        <p className="profile-username">@{profile.username}</p>
+                        {memberSince && (
+                            <p className="profile-since">Član od {memberSince}</p>
+                        )}
+                    </div>
 
-                        <label>
-                            Username
-                            <input
-                                name="username"
-                                value={form.username}
-                                onChange={handleChange}
-                            />
-                        </label>
+                    {!editing && (
+                        <button className="edit-btn" onClick={() => setEditing(true)}>
+                            Uredi profil
+                        </button>
+                    )}
+                </div>
 
-                        <div className="image-upload-field">
-                            <span className="image-upload-label">Profilna slika</span>
-                            <div className="image-upload-box" onClick={handleChooseImageClick}>
-                                {imagePreview ? (
-                                    <img
-                                        src={imagePreview}
-                                        alt="Pregled slike"
-                                        className="image-upload-preview"
-                                    />
-                                ) : (
-                                    <svg
-                                        className="image-upload-icon"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
-                                        <path
-                                            d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
-                                            stroke="#9aa0b4"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
+                <div className="profile-stats-row">
+                    <div className="stat-card">
+                        <span className="stat-number">{savedCount}</span>
+                        <span className="stat-label">Sačuvanih događaja</span>
+                    </div>
+                    <div className="stat-card">
+                        <span className="stat-number">
+                            {profile.email_notifications ? "Uključena" : "Isključena"}
+                        </span>
+                        <span className="stat-label">Email obavještenja</span>
+                    </div>
+                </div>
+
+                <div className="profile-details-card">
+                    <h3>Informacije o nalogu</h3>
+
+                    {!editing ? (
+                        <div className="profile-info-list">
+                            <div className="info-row">
+                                <span className="info-label">Ime</span>
+                                <span className="info-value">{profile.first_name || "—"}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Prezime</span>
+                                <span className="info-value">{profile.last_name || "—"}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Username</span>
+                                <span className="info-value">{profile.username || "—"}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">E-mail</span>
+                                <span className="info-value">{profile.email || "—"}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="profile-edit-form">
+                            <label>
+                                Ime
+                                <input
+                                    name="first_name"
+                                    value={form.first_name}
+                                    onChange={handleChange}
+                                />
+                            </label>
+
+                            <label>
+                                Prezime
+                                <input
+                                    name="last_name"
+                                    value={form.last_name}
+                                    onChange={handleChange}
+                                />
+                            </label>
+
+                            <label>
+                                Username
+                                <input
+                                    name="username"
+                                    value={form.username}
+                                    onChange={handleChange}
+                                />
+                            </label>
+
+                            <div className="image-upload-field">
+                                <span className="image-upload-label">Profilna slika</span>
+                                <div className="image-upload-box" onClick={handleChooseImageClick}>
+                                    {imagePreview ? (
+                                        <img
+                                            src={imagePreview}
+                                            alt="Pregled slike"
+                                            className="image-upload-preview"
                                         />
-                                    </svg>
-                                )}
+                                    ) : (
+                                        <svg
+                                            className="image-upload-icon"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
+                                            <path
+                                                d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
+                                                stroke="#9aa0b4"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className="image-upload-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleChooseImageClick();
+                                        }}
+                                    >
+                                        Izaberite sliku
+                                    </button>
+                                </div>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="image-upload-input-hidden"
+                                />
+                            </div>
+                            <div className="form-actions">
                                 <button
-                                    type="button"
-                                    className="image-upload-btn"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleChooseImageClick();
-                                    }}
+                                    className="save-btn"
+                                    onClick={handleSave}
+                                    disabled={saving}
                                 >
-                                    Izaberite sliku
+                                    {saving ? "Čuvanje..." : "Sačuvaj izmjene"}
+                                </button>
+                                <button className="cancel-btn" onClick={handleCancel}>
+                                    Otkaži
                                 </button>
                             </div>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="image-upload-input-hidden"
-                            />
                         </div>
-                        <div className="form-actions">
-                            <button
-                                className="save-btn"
-                                onClick={handleSave}
-                                disabled={saving}
-                            >
-                                {saving ? "Čuvanje..." : "Sačuvaj izmjene"}
-                            </button>
-                            <button className="cancel-btn" onClick={handleCancel}>
-                                Otkaži
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                {saveMsg && (
-                    <p className={saveError ? "save-msg save-msg-error" : "save-msg"}>
-                        {saveMsg}
-                    </p>
-                )}
+                    {saveMsg && (
+                        <p className={saveError ? "save-msg save-msg-error" : "save-msg"}>
+                            {saveMsg}
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );

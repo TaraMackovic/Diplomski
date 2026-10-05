@@ -113,6 +113,13 @@ function Register() {
 
     }
 
+    const continueAsGuest = () => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("is_staff");
+        navigate("/userHome");
+    };
+
     return(
 
         <div className="register-page">
@@ -206,6 +213,13 @@ function Register() {
                     Prijavite se
                 </Link>
                 </p>
+                <button
+                    type="button"
+                    className="guest-link"
+                    onClick={continueAsGuest}
+                >
+                    Nastavite kao gost
+                </button>
             </div>
         </div>
     )

@@ -1,9 +1,14 @@
 .settings-page {
-    max-width: 900px; 
-    margin: 0 auto;
-    padding: 30px 20px 60px;
+    background: #F6F5EF;
+    min-height: 100vh;
+    padding: 40px;
     font-family: "Segoe UI", sans-serif;
     color: #1a1a2e;
+}
+
+.settings-container {
+    max-width: 900px;
+    margin: auto;
 }
 
 .settings-loading {

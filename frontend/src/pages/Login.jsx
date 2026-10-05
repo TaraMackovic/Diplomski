@@ -44,6 +44,13 @@ function Login() {
         }
     };
 
+    const continueAsGuest = () => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("is_staff");
+        navigate("/userHome");
+    };
+
     return (
         <div className="auth-page">
             <div className="auth-card">
@@ -101,6 +108,13 @@ function Login() {
                         Registrujte se
                     </Link>
                 </p>
+                <button
+                    type="button"
+                    className="guest-link"
+                    onClick={continueAsGuest}
+                >
+                    Nastavite kao gost
+                </button>
             </div>
         </div>
     );
