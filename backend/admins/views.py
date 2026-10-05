@@ -116,8 +116,8 @@ def dashboard_stats(request):
     now = timezone.now()
 
     total_events = Event.objects.count()
-    active_events = Event.objects.filter(status="active", date__gte=now).count()
-    past_events = Event.objects.filter(Q(status="finished") | Q(date__lt=now)).count()
+    active_events = Event.objects.filter(status="active", start_date__gte=now).count()
+    past_events = Event.objects.filter(Q(status="finished") | Q(end_date__lt=now)).count()
     cancelled_events = Event.objects.filter(status="cancelled").count()
 
     total_users = User.objects.count()
@@ -270,7 +270,7 @@ def admin_analytics(request):
         Event.objects.annotate(saved_count=Count("saved_by"))
         .filter(saved_count__gt=0)
         .order_by("-saved_count")[:10]
-        .values("id", "title", "date", "saved_count")
+        .values("id", "title", "start_date", "saved_count")
     )
 
     saved_per_user = list(
@@ -300,7 +300,7 @@ def admin_events(request):
     if request.method == "GET":
         events = Event.objects.select_related("category").annotate(
             saved_count=Count("saved_by")
-        ).order_by("-date")
+        ).order_by("-start_date")
 
         search = request.query_params.get("search")
         if search:
@@ -320,17 +320,20 @@ def admin_events(request):
 
         date_from = request.query_params.get("date_from")
         if date_from:
-            events = events.filter(date__gte=date_from)
+            events = events.filter(start_date__gte=date_from)
 
         date_to = request.query_params.get("date_to")
         if date_to:
-            events = events.filter(date__lte=date_to)
+            events = events.filter(start_date__lte=date_to)
 
         ordering = request.query_params.get("ordering")
         allowed_ordering = {
-            "date", "-date", "title", "-title", "created_at", "-created_at",
+            "start_date", "-start_date",
+            "title", "-title",
+            "created_at", "-created_at",
             "status", "-status",
         }
+
         if ordering in allowed_ordering:
             events = events.order_by(ordering)
 
@@ -343,11 +346,12 @@ def admin_events(request):
         })
 
     serializer = AdminEventSerializer(data=request.data)
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
 
+    return Response(serializer.errors, status=400)
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([IsAdminUser])

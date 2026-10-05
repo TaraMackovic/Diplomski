@@ -12,7 +12,7 @@ class AdminEventSerializer(serializers.ModelSerializer):
         model = Event
         fields = [
             "id", "title", "description", "location", "latitude", "longitude",
-            "date", "time_known", "image", "price", "category", "category_name",
+            "start_date", "end_date", "time_known", "image", "price", "category", "category_name",
             "status", "created_at", "updated_at", "tags", "sources", "saved_count",
         ]
 
