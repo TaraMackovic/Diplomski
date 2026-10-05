@@ -90,7 +90,8 @@ def parse_event_card(article):
         "location": None,
         "latitude": None,
         "longitude": None,
-        "date": None,
+        "start_date": None,
+        "end_date": None,
         "image": None,
         "price": 0,
         "source": "banjalukacity.info",
@@ -122,27 +123,43 @@ def parse_event_card(article):
 
     if countdown:
         x_data = countdown.get("x-data", "")
-        match = re.search(r'start:\s*new Date\("([^"]+)"\)', x_data)
 
-        if match:
+        start_match = re.search(r'start:\s*new Date\("([^"]+)"\)', x_data)
+
+        if start_match:
             try:
-                event["date"] = datetime.fromisoformat(match.group(1))
+                event["start_date"] = datetime.fromisoformat(start_match.group(1))
             except ValueError:
                 pass
 
-    if not event["date"]:
+        end_match = re.search(r'end:\s*"([^"]+)"', x_data)
+
+        if end_match:
+            try:
+                event["end_date"] = datetime.fromisoformat(end_match.group(1))
+            except ValueError:
+                pass
+
+    if not event["start_date"]:
         text = article.get_text(" ", strip=True)
-        match = re.search(r"Datum održavanja:\s*(\d{2})\.(\d{2})\.(\d{4})", text)
+        match = re.search(
+            r"Datum održavanja:\s*(\d{2})\.(\d{2})\.(\d{4})"
+            r"(?:\s*[-–]\s*(\d{2})\.(\d{2})\.(\d{4}))?",
+            text
+        )
 
         if match:
-            day, month, year = map(int, match.groups())
+            d1, m1, y1, d2, m2, y2 = match.groups()
             try:
-                event["date"] = datetime(year, month, day)
+                event["start_date"] = datetime(int(y1), int(m1), int(d1))
+                if d2:
+                    event["end_date"] = datetime(int(y2), int(m2), int(d2), 23, 59, 59)
             except ValueError:
                 pass
 
-    if event["date"] and event["date"].tzinfo:
-        event["date"] = event["date"].replace(tzinfo=None)
+    for key in ("start_date", "end_date"):
+        if event[key] and event[key].tzinfo:
+            event[key] = event[key].replace(tzinfo=None)
 
     return event
 
@@ -260,12 +277,14 @@ for card in cards:
         print("  Greska pri scrapingu detalja:", base_event["source_url"], "-", e)
         continue
 
-    if event["date"] and event["date"].date() < today:
-        continue  # sigurnosni filter - preskoci ako je ipak u proslosti
+    last_day = event["end_date"] or event["start_date"]
+
+    if last_day and last_day.date() < today:
+        continue
 
     all_events.append(event)
 
-    #print("  +", event["title"], "->", event["date"])
+    #print("  +", event["title"], "->", event["start_date"], "-", event["end_date"])
 
 
 print("\nUkupno prikupljenih dogadjaja:", len(all_events))
@@ -280,8 +299,9 @@ def prepare_for_json(events):
     for event in events:
         event_copy = event.copy()
 
-        if isinstance(event_copy.get("date"), datetime):
-            event_copy["date"] = event_copy["date"].isoformat()
+        for key in ("start_date", "end_date"):
+            if isinstance(event_copy.get(key), datetime):
+                event_copy[key] = event_copy[key].isoformat()
 
         json_ready.append(event_copy)
 

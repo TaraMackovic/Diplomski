@@ -128,7 +128,8 @@ def parse_event_card(card, category_name):
         "location": None,
         "latitude": None,
         "longitude": None,
-        "date": None,
+        "start_date": None,
+        "end_date": None,
         "image": None,
         "price": 0,
         "source": "Ulaznice.org",
@@ -175,31 +176,74 @@ def extract_location(scope):
     return venue or city
 
 
-DATE_TIME_RE = re.compile(
-    r"(\d{1,2})\.\s*([A-Za-zČĆŽŠĐčćžšđ]+)\.?\s*(\d{4})\s+(\d{2}:\d{2})"
+MONTH_WORD = r"([A-Za-zČĆŽŠĐčćžšđ]+)"
+
+# "30 Okt 2026 - 02 Nov 2026"  ili  "30. Okt - 2. Nov 2026"
+RANGE_CROSS_RE = re.compile(
+    r"(\d{1,2})\.?\s*" + MONTH_WORD + r"\.?\s*(\d{4})?\s*[-–]\s*"
+    r"(\d{1,2})\.?\s*" + MONTH_WORD + r"\.?\s*(\d{4})"
 )
-DATE_ONLY_RE = re.compile(
-    r"(\d{1,2})\.\s*([A-Za-zČĆŽŠĐčćžšđ]+)\.?\s*(\d{4})"
+
+# "17 - 18 Okt 2026"
+RANGE_SAME_MONTH_RE = re.compile(
+    r"(\d{1,2})\.?\s*[-–]\s*(\d{1,2})\.?\s*" + MONTH_WORD + r"\.?\s*(\d{4})"
 )
 
+# "17. Okt 2026"  ili  "17 Okt 2026"
+SINGLE_DATE_RE = re.compile(
+    r"(\d{1,2})\.?\s*" + MONTH_WORD + r"\.?\s*(\d{4})"
+)
 
-def _parse_date_match(match, time_str=None):
-    day, month_name, year = match.group(1), match.group(2), match.group(3)
+TIME_RE = re.compile(r"(\d{1,2}):(\d{2})")
 
+
+def make_date(day, month_name, year, hour=0, minute=0, second=0):
     month = MONTHS_BS.get(month_name.lower()[:3])
 
     if not month:
         return None
 
-    hour, minute = (0, 0)
-
-    if time_str:
-        hour, minute = map(int, time_str.split(":"))
-
-    return datetime(int(year), month, int(day), hour, minute)
+    try:
+        return datetime(int(year), month, int(day), hour, minute, second)
+    except ValueError:
+        return None
 
 
-def extract_datetime(soup):
+def parse_date_range(text):
+
+    if not text:
+        return None, None
+
+    time_match = TIME_RE.search(text)
+    hour, minute = (int(time_match.group(1)), int(time_match.group(2))) if time_match else (0, 0)
+
+    for m in RANGE_CROSS_RE.finditer(text):
+        d1, month1, y1, d2, month2, y2 = m.groups()
+        start = make_date(d1, month1, y1 or y2, hour, minute)
+        end = make_date(d2, month2, y2, 23, 59, 59)
+
+        if start and end:
+            return start, end
+
+    for m in RANGE_SAME_MONTH_RE.finditer(text):
+        d1, d2, month, year = m.groups()
+        start = make_date(d1, month, year, hour, minute)
+        end = make_date(d2, month, year, 23, 59, 59)
+
+        if start and end:
+            return start, end
+
+    for m in SINGLE_DATE_RE.finditer(text):
+        d, month, year = m.groups()
+        start = make_date(d, month, year, hour, minute)
+
+        if start:
+            return start, None
+
+    return None, None
+
+
+def extract_dates(soup):
     candidates = []
 
     time_tag = soup.select_one("span.time")
@@ -209,20 +253,15 @@ def extract_datetime(soup):
     candidates.append(soup.get_text(" ", strip=True))
 
     for text in candidates:
+        start, end = parse_date_range(text)
 
-        match = DATE_TIME_RE.search(text)
-        if match:
-            result = _parse_date_match(match, match.group(4))
-            if result:
-                return result
+        if start:
+            if end and end < start:
+                end = None
 
-        match = DATE_ONLY_RE.search(text)
-        if match:
-            result = _parse_date_match(match)
-            if result:
-                return result
+            return start, end
 
-    return None
+    return None, None
 
 
 def extract_price_from_seatmap(html_text):
@@ -323,7 +362,7 @@ def scrape_event_detail(base_event):
     if location:
         event["location"] = location
 
-    event["date"] = extract_datetime(soup)
+    event["start_date"], event["end_date"] = extract_dates(soup)
 
     event["price"] = extract_price(soup, response.text)
 
@@ -400,7 +439,7 @@ for category_id, (category_slug, category_name) in CATEGORIES.items():
 
         all_events.append(event)
 
-        #print("  + Banja Luka dogadjaj:", event["title"])
+        #print("  + Banja Luka dogadjaj:", event["title"], "->", event["start_date"], "-", event["end_date"])
 
 
 print("\nUkupno pronadjenih Banja Luka dogadjaja:", len(all_events))
@@ -415,8 +454,9 @@ def prepare_for_json(events):
     for event in events:
         event_copy = event.copy()
 
-        if isinstance(event_copy.get("date"), datetime):
-            event_copy["date"] = event_copy["date"].isoformat()
+        for key in ("start_date", "end_date"):
+            if isinstance(event_copy.get(key), datetime):
+                event_copy[key] = event_copy[key].isoformat()
 
         json_ready.append(event_copy)
 

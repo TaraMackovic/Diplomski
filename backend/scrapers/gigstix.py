@@ -91,15 +91,7 @@ def is_target_city(city_text):
     return any(city in text for city in TARGET_CITIES)
 
 
-def parse_full_datetime(text):
-    if not text:
-        return None
-
-    match = FULL_DATETIME_RE.search(text)
-
-    if not match:
-        return None
-
+def datetime_from_match(match):
     day = int(match.group(1))
     month = month_from_word(match.group(2))
     year = int(match.group(3))
@@ -112,6 +104,32 @@ def parse_full_datetime(text):
         return datetime(year, month, day, hour, minute)
     except ValueError:
         return None
+
+
+def parse_full_datetime(text):
+    if not text:
+        return None
+
+    match = FULL_DATETIME_RE.search(text)
+
+    if not match:
+        return None
+
+    return datetime_from_match(match)
+
+
+def parse_all_full_datetimes(text):
+    if not text:
+        return []
+
+    results = []
+
+    for match in FULL_DATETIME_RE.finditer(text):
+        parsed = datetime_from_match(match)
+        if parsed:
+            results.append(parsed)
+
+    return results
 
 
 def parse_date_only(text):
@@ -179,13 +197,14 @@ def parse_event_card(card, category_name):
         "location": None,
         "latitude": None,
         "longitude": None,
-        "date": None,
+        "start_date": None,
+        "end_date": None,
         "image": None,
         "price": 0,
         "source": "Gigstix.ba",
         "source_url": None,
         "category": category_name,
-        "_city": None,  # privremeno, koristi se samo za filtriranje
+        "_city": None, 
     }
 
     title_tag = card.select_one(".gt-title a")
@@ -212,7 +231,7 @@ def parse_event_card(card, category_name):
     date_span = card.select_one(".gt-date span")
 
     if date_span:
-        event["date"] = parse_date_only(date_span.get_text(strip=True))
+        event["start_date"] = parse_date_only(date_span.get_text(strip=True))
 
     text_div = card.select_one(".gt-text")
 
@@ -250,6 +269,37 @@ def extract_detail_field(soup, li_class):
         return clean_text(link.get_text(strip=True))
 
     return clean_text(inner.get_text(strip=True))
+
+
+def extract_end_date(soup, start_text):
+    end_text = extract_detail_field(soup, "gt-end-date")
+
+    if not end_text:
+        for li in soup.select(".gt-content-detail-box li"):
+            title_tag = li.select_one(".gt-title")
+            inner = li.select_one(".gt-inner")
+
+            if not title_tag or not inner:
+                continue
+
+            title = title_tag.get_text(strip=True).lower()
+
+            if "zavr" in title or "kraj" in title:
+                end_text = clean_text(inner.get_text(strip=True))
+                break
+
+    if end_text:
+        end_date = parse_full_datetime(end_text) or parse_date_only(end_text)
+
+        if end_date:
+            return end_date
+
+    all_dates = parse_all_full_datetimes(start_text)
+
+    if len(all_dates) >= 2:
+        return all_dates[1]
+
+    return None
 
 
 def extract_section_content(soup, section_title):
@@ -304,11 +354,19 @@ def scrape_event_detail(base_event):
     response = requests.get(url, headers=HEADERS, timeout=15)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    precise_date_text = extract_detail_field(soup, "gt-start-date")
-    precise_date = parse_full_datetime(precise_date_text)
+    start_text = extract_detail_field(soup, "gt-start-date")
+    precise_start = parse_full_datetime(start_text)
 
-    if precise_date:
-        event["date"] = precise_date
+    if precise_start:
+        event["start_date"] = precise_start
+
+    end_date = extract_end_date(soup, start_text)
+
+    # sigurnosna provjera: kraj ne moze biti prije pocetka
+    if end_date and event["start_date"] and end_date < event["start_date"]:
+        end_date = None
+
+    event["end_date"] = end_date
 
     city = extract_detail_field(soup, "gt-locations")
     venue = extract_detail_field(soup, "gt-venue")
@@ -395,8 +453,13 @@ for category_slug, category_url in CATEGORIES.items():
             print("  Greska pri scrapingu detalja:", base_event["source_url"], "-", e)
             event = base_event
 
-        if not event["date"] or event["date"].date() < today:
-            continue 
+        if not event["start_date"]:
+            continue
+
+        last_day = event["end_date"] or event["start_date"]
+
+        if last_day.date() < today:
+            continue
 
         lat, lon = get_coordinates(event["location"])
         event["latitude"] = lat
@@ -405,7 +468,7 @@ for category_slug, category_url in CATEGORIES.items():
         del event["_city"]
         all_events.append(event)
 
-        #print("  +", event["title"], "->", event["date"])
+        #print("  +", event["title"], "->", event["start_date"], "-", event["end_date"])
 
 
 print("\nUkupno pronadjenih Banja Luka dogadjaja:", len(all_events))
@@ -420,8 +483,9 @@ def prepare_for_json(events):
     for event in events:
         event_copy = event.copy()
 
-        if isinstance(event_copy.get("date"), datetime):
-            event_copy["date"] = event_copy["date"].isoformat()
+        for key in ("start_date", "end_date"):
+            if isinstance(event_copy.get(key), datetime):
+                event_copy[key] = event_copy[key].isoformat()
 
         json_ready.append(event_copy)
 

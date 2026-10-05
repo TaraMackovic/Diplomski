@@ -45,13 +45,39 @@ MONTHS_BS = {
 
 MONTH_WORD_PATTERN = (
     r"(januar\w*|februar\w*|mart\w*|april\w*|maj\w*|jun\w*|jul\w*|"
-    r"avgust\w*|septembar\w*|oktobar\w*|novembar\w*|decembar\w*)"
+    r"avgust\w*|septembar\w*|septembr\w*|oktobar\w*|oktobr\w*|"
+    r"novembar\w*|novembr\w*|decembar\w*|decembr\w*)"
 )
 
 EVENT_DATE_RE = re.compile(
     r"(\d{1,2})\.\s*" + MONTH_WORD_PATTERN + r"\.?\s*(\d{4})?",
     re.IGNORECASE
 )
+
+# razdvajac u opsegu: "12. do 15. oktobra", "12. - 15. oktobra"
+RANGE_SEP = r"(?:-|–|do)"
+
+# "od 12. do 15. oktobra [2026]"  ->  dan1, dan2, mjesec, godina
+RANGE_SAME_MONTH_RE = re.compile(
+    r"(\d{1,2})\.\s*" + RANGE_SEP + r"\s*(\d{1,2})\.\s*" + MONTH_WORD_PATTERN + r"\.?\s*(\d{4})?",
+    re.IGNORECASE
+)
+
+# "od 28. septembra do 3. oktobra [2026]"  ->  dan1, mjesec1, godina1, dan2, mjesec2, godina2
+RANGE_CROSS_MONTH_RE = re.compile(
+    r"(\d{1,2})\.\s*" + MONTH_WORD_PATTERN + r"\.?\s*(\d{4})?\.?\s*" + RANGE_SEP + r"\s*"
+    r"(\d{1,2})\.\s*" + MONTH_WORD_PATTERN + r"\.?\s*(\d{4})?",
+    re.IGNORECASE
+)
+
+# "... i trajace do 20. septembra"  ->  dan, mjesec, godina
+END_DO_RE = re.compile(
+    r"\bdo\s+(\d{1,2})\.\s*" + MONTH_WORD_PATTERN + r"\.?\s*(\d{4})?",
+    re.IGNORECASE
+)
+
+# koliko znakova iza pocetnog datuma trazimo "do D. mjesec"
+END_SEARCH_WINDOW = 250
 
 EVENT_TIME_RE = re.compile(
     r"\b(?:u\s*)?(\d{1,2})(?:[:.](\d{2}))?\s*(?:časova|čas|sati|h\b)",
@@ -182,7 +208,8 @@ def parse_event_card(card, category_name, published_date):
         "location": "Banja Luka",
         "latitude": None,
         "longitude": None,
-        "date": published_date,
+        "start_date": published_date,
+        "end_date": None,
         "image": None,
         "price": 0,
         "source": "banjaluka.com",
@@ -210,43 +237,149 @@ def parse_event_card(card, category_name, published_date):
 # 6. Ekstrakcija pojedinacnog dogadjaja
 #######################################
 
-def extract_event_datetime(article_text, published_date):
-    if not article_text:
-        return published_date, False
-
-    match = EVENT_DATE_RE.search(article_text)
-
-    if not match:
-        return published_date, False
-
-    day = int(match.group(1))
-    month = month_from_word(match.group(2))
-    year_str = match.group(3)
-
-    if not month:
-        return published_date, False
+def resolve_year(month, year_str, published_date):
+    """Ako godina nije navedena u tekstu, uzimamo godinu objave clanka
+    (uz prelaz decembar -> januar/februar/mart)."""
 
     if year_str:
-        year = int(year_str)
-    elif published_date:
+        return int(year_str)
+
+    if published_date:
         year = published_date.year
+
         if published_date.month == 12 and month in (1, 2, 3):
             year += 1
-    else:
-        year = date.today().year
 
+        return year
+
+    return date.today().year
+
+
+def extract_event_time(article_text):
     time_match = EVENT_TIME_RE.search(article_text)
 
     if time_match:
         hour = int(time_match.group(1))
         minute = int(time_match.group(2)) if time_match.group(2) else 0
-    else:
-        hour, minute = 0, 0
+        return hour, minute
 
+    return 0, 0
+
+
+def safe_datetime(year, month, day, hour=0, minute=0, second=0):
     try:
-        return datetime(year, month, day, hour, minute), True
+        return datetime(year, month, day, hour, minute, second)
     except ValueError:
-        return published_date, False
+        return None
+
+
+def parse_range_match(kind, match, published_date, hour, minute):
+    """Pretvara pogodak regexa za opseg u (start, end). Vraca None ako nije validan."""
+
+    if kind == "same_month":
+        day1, day2, month_word, year_str = match.groups()
+        month = month_from_word(month_word)
+
+        if not month:
+            return None
+
+        year = resolve_year(month, year_str, published_date)
+
+        start = safe_datetime(year, month, int(day1), hour, minute)
+        end = safe_datetime(year, month, int(day2), 23, 59, 59)
+
+    else:
+        day1, month1_word, year1_str, day2, month2_word, year2_str = match.groups()
+        month1 = month_from_word(month1_word)
+        month2 = month_from_word(month2_word)
+
+        if not month1 or not month2:
+            return None
+
+        wraps_year = 1 if month2 < month1 else 0
+
+        if year2_str:
+            year2 = int(year2_str)
+            year1 = int(year1_str) if year1_str else year2 - wraps_year
+        else:
+            year1 = resolve_year(month1, year1_str, published_date)
+            year2 = year1 + wraps_year
+
+        start = safe_datetime(year1, month1, int(day1), hour, minute)
+        end = safe_datetime(year2, month2, int(day2), 23, 59, 59)
+
+    if start and end and end >= start:
+        return start, end
+
+    return None
+
+
+def extract_event_dates(article_text, published_date):
+    """Vraca (start_date, end_date, found_in_text).
+
+    Redoslijed:
+      1) opseg "od 12. do 15. oktobra" ili "od 28. septembra do 3. oktobra"
+      2) prvi datum u tekstu + "do 20. septembra" nedaleko iza njega
+      3) samo prvi datum u tekstu
+      4) datum objave clanka (end_date = None)
+    """
+
+    if not article_text:
+        return published_date, None, False
+
+    hour, minute = extract_event_time(article_text)
+
+    # 1) opsezi - uzimamo onaj koji se prvi pojavljuje u tekstu
+    candidates = []
+
+    for m in RANGE_CROSS_MONTH_RE.finditer(article_text):
+        candidates.append((m.start(), "cross_month", m))
+
+    for m in RANGE_SAME_MONTH_RE.finditer(article_text):
+        candidates.append((m.start(), "same_month", m))
+
+    candidates.sort(key=lambda c: c[0])
+
+    for _, kind, m in candidates:
+        result = parse_range_match(kind, m, published_date, hour, minute)
+
+        if result:
+            return result[0], result[1], True
+
+    # 2) i 3) pocetni datum, pa eventualno "do D. mjesec" iza njega
+    match = EVENT_DATE_RE.search(article_text)
+
+    if not match:
+        return published_date, None, False
+
+    day = int(match.group(1))
+    month = month_from_word(match.group(2))
+
+    if not month:
+        return published_date, None, False
+
+    year = resolve_year(month, match.group(3), published_date)
+    start = safe_datetime(year, month, day, hour, minute)
+
+    if not start:
+        return published_date, None, False
+
+    end = None
+    window = article_text[match.end():match.end() + END_SEARCH_WINDOW]
+    end_match = END_DO_RE.search(window)
+
+    if end_match:
+        end_day = int(end_match.group(1))
+        end_month = month_from_word(end_match.group(2))
+
+        if end_month:
+            end_year = int(end_match.group(3)) if end_match.group(3) else start.year + (1 if end_month < start.month else 0)
+            end = safe_datetime(end_year, end_month, end_day, 23, 59, 59)
+
+            if end and end < start:
+                end = None
+
+    return start, end, True
 
 # 7. Scraping detalja pojediancnog dogadjaja
 ############################################
@@ -317,7 +450,7 @@ def scrape_event_detail(base_event):
 
     detail_match = DETAIL_DATE_RE.search(soup.get_text(" ", strip=True))
 
-    published_date = event["date"]
+    published_date = event["start_date"]
 
     if detail_match:
         day, month, year, hour, minute = map(int, detail_match.groups())
@@ -329,8 +462,9 @@ def scrape_event_detail(base_event):
     description = extract_description(soup)
     event["description"] = description
 
-    event_datetime, found_in_text = extract_event_datetime(description, published_date)
-    event["date"] = event_datetime
+    start_date, end_date, found_in_text = extract_event_dates(description, published_date)
+    event["start_date"] = start_date
+    event["end_date"] = end_date
     event["_date_from_text"] = found_in_text  
 
     event["price"] = extract_price(description)
@@ -403,8 +537,14 @@ for category_slug, category_name in CATEGORIES.items():
             print("  Greska pri scrapingu detalja:", base_event["source_url"], "-", e)
             continue
 
-        if not event["date"] or event["date"].date() < today:
-            continue  # preskačemo prošle (ili neodredive) dogadjaje
+        if not event["start_date"]:
+            continue  # preskacemo neodredive dogadjaje
+
+        # preskacemo prosle dogadjaje (koristi end_date ako postoji, inace start_date)
+        last_day = event["end_date"] or event["start_date"]
+
+        if last_day.date() < today:
+            continue
 
         event["latitude"] = event.get("latitude")
         event["longitude"] = event.get("longitude")
@@ -416,7 +556,7 @@ for category_slug, category_name in CATEGORIES.items():
 
         all_events.append(event)
 
-        #print("  +", event["title"], "->", event["date"])
+        #print("  +", event["title"], "->", event["start_date"], "-", event["end_date"])
 
 
 print("\nUkupno pronadjenih buducih dogadjaja:", len(all_events))
@@ -431,8 +571,9 @@ def prepare_for_json(events):
     for event in events:
         event_copy = event.copy()
 
-        if isinstance(event_copy.get("date"), datetime):
-            event_copy["date"] = event_copy["date"].isoformat()
+        for key in ("start_date", "end_date"):
+            if isinstance(event_copy.get(key), datetime):
+                event_copy[key] = event_copy[key].isoformat()
 
         json_ready.append(event_copy)
 
