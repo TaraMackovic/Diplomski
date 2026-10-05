@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import EventCard from "../components/EventCard";
 import FilterDrawer from "../components/FilterDrawer";
 import Pagination from "../components/Pagination";
@@ -9,6 +9,7 @@ import "../styles/UserHome.css";
 
 import searchIcon from "../assets/icons/icon_search.png";
 import filterIcon from "../assets/icons/icon_filter.png";
+import guestWelcome from "../assets/icons/guest_night.png"; 
 
 const API_URL = "http://localhost:8000";
 const EVENTS_PER_PAGE = 12;
@@ -59,7 +60,10 @@ function UserHome() {
             const response = await fetch(`${API_URL}/events/recommended/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if (!response.ok) return;
+            if (!response.ok) {
+                console.log("Recommended failed:", response.status);
+                return;
+            }
             const data = await response.json();
             setRecommended(data.map(mapEvent));
         } catch (err) {
@@ -99,19 +103,18 @@ function UserHome() {
     if (loading) return <h2>Učitavanje...</h2>;
     if (error) return <h2>{error}</h2>;
 
+    const isGuest = !localStorage.getItem("access_token");
+
     const isSearching = search.trim().length > 0;
     const activeFilterCount = countActiveFilters(filters);
     const isFiltering = activeFilterCount > 0 || !!filters.sort;
 
     const showRecommended = !isSearching && !isFiltering;
-
-    const recommendedIds = new Set(recommended.map((e) => e.id));
-
-    const baseEvents = events;
+    const showGuestWelcome = isGuest && showRecommended;
 
     const searchedEvents = isSearching
-        ? baseEvents.filter((e) => matchesSearch(e, search))
-        : baseEvents;
+        ? events.filter((e) => matchesSearch(e, search))
+        : events;
 
     const resultEvents = applyFilters(searchedEvents, filters, userLocation);
 
@@ -125,6 +128,29 @@ function UserHome() {
 
         <div className="home-page">
             <div className="home-container">
+                {showGuestWelcome && (
+                    <div
+                        className="guest-welcome"
+                        style={{ backgroundImage: `url(${guestWelcome})` }}
+                    >
+                        <div className="guest-welcome-overlay">
+                            <h1>Dobrodošli u Banja Luku</h1>
+                            <p>Otkrijte koncerte, festivale i događaje u vašem gradu.</p>
+                            <div className="guest-welcome-actions">
+                                <Link to="/register" className="welcome-btn welcome-btn-primary">
+                                    Registrujte se
+                                </Link>
+                                <Link to="/login" className="welcome-btn welcome-btn-secondary">
+                                    Prijavite se
+                                </Link>
+                            </div>
+                            <span className="guest-welcome-note">
+                                Nakon registracije dobijate preporuke po svojim interesovanjima.
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="search-box">
                     <img src={searchIcon} className="search-icon" alt="" />
                     <input
@@ -143,7 +169,7 @@ function UserHome() {
                     </button>
                 </div>
 
-                {showRecommended && recommended.length > 0 && (
+                {!isGuest && showRecommended && recommended.length > 0 && (
                     <div className="recommended-section">
                         <h2 className="section-title">Preporučeno za tebe</h2>
                         <div className="recommended-scroll">

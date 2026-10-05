@@ -66,19 +66,19 @@ export function applyFilters(events, filters, userLocation) {
 
     switch (filters.dateOption) {
         case "today":
-            result = result.filter((e) => isSameDay(e.date, now));
+            result = result.filter((e) => isSameDay(e.start_date, now));
             break;
         case "tomorrow": {
             const tomorrow = new Date(now);
             tomorrow.setDate(now.getDate() + 1);
-            result = result.filter((e) => isSameDay(e.date, tomorrow));
+            result = result.filter((e) => isSameDay(e.start_date, tomorrow));
             break;
         }
         case "week":
-            result = result.filter((e) => isThisWeek(e.date));
+            result = result.filter((e) => isThisWeek(e.start_date));
             break;
         case "weekend":
-            result = result.filter((e) => isWeekend(e.date));
+            result = result.filter((e) => isWeekend(e.start_date));
             break;
         case "custom":
             if (filters.customDateFrom && filters.customDateTo) {
@@ -86,7 +86,7 @@ export function applyFilters(events, filters, userLocation) {
                 const to = new Date(filters.customDateTo);
                 to.setHours(23, 59, 59, 999);
                 result = result.filter((e) => {
-                    const d = new Date(e.date);
+                    const d = new Date(e.start_date);
                     return d >= from && d <= to;
                 });
             }
@@ -100,7 +100,7 @@ export function applyFilters(events, filters, userLocation) {
             result.sort((a, b) => a.title.localeCompare(b.title, "sr"));
             break;
         case "date":
-            result.sort((a, b) => new Date(a.date) - new Date(b.date));
+            result.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
             break;
         case "distance":
             if (userLocation) {

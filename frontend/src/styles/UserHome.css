@@ -37,6 +37,7 @@
     border: none;
     background: none;
     cursor: pointer;
+    position: relative;
 }
 
 .filter-btn img {
@@ -57,6 +58,83 @@
     gap: 30px;
 }
 
+.guest-welcome {
+    border-radius: 28px;
+    background-size: cover;
+    background-position: center;
+    background-color: #37388e; 
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(52, 52, 93, 0.15);
+}
+
+.guest-welcome-overlay {
+    min-height: 280px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 14px;
+    color: white;
+    background: linear-gradient(
+        90deg,
+        rgba(44, 44, 86, 0.85) 0%,
+        rgba(44, 44, 86, 0.45) 60%,
+        rgba(44, 44, 86, 0.1) 100%
+    );
+}
+
+.guest-welcome-overlay h1 {
+    margin: 0;
+    font-family: "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 40px;
+}
+
+.guest-welcome-overlay p {
+    margin: 0;
+    font-size: 17px;
+    max-width: 520px;
+    opacity: 0.95;
+}
+
+.guest-welcome-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.welcome-btn {
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.welcome-btn:hover {
+    transform: translateY(-2px);
+}
+
+.welcome-btn-primary {
+    background: #EB5A5A;
+    color: white;
+}
+
+.welcome-btn-secondary {
+    background: white;
+    color: #37388e;
+}
+
+.guest-welcome-note {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+
 .recommended-section {
     margin-bottom: 32px;
 }
@@ -67,8 +145,6 @@
     overflow-x: auto;
     padding-bottom: 8px;
     scroll-snap-type: x proximity;
-
-    /* uljepšan scrollbar, opciono */
     scrollbar-width: thin;
     scrollbar-color: #cfcfe0 transparent;
 }
@@ -88,43 +164,10 @@
     scroll-snap-align: start;
 }
 
-@media (max-width: 600px) {
-    .recommended-item {
-        width: 220px;
-    }
-}
-
-@media(max-width:1000px){
-    .event-grid{
-        grid-template-columns:
-            repeat(2,1fr);
-    }
-}
-
-@media(max-width:700px){
-
-    .home-page{
-        padding:20px;
-    }
-
-    .event-grid{
-        grid-template-columns:1fr;
-    }
-
-    .search-box{
-        height:65px;
-    }
-
-}
-
 .no-results {
     padding: 20px 30px;
     color: #777;
     font-size: 14px;
-}
-
-.filter-btn {
-    position: relative;
 }
 
 .filter-badge {
@@ -141,4 +184,45 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1000px) {
+    .event-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .home-page {
+        padding: 20px;
+    }
+
+    .event-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .search-box {
+        height: 65px;
+    }
+
+    .guest-welcome-overlay {
+        min-height: 220px;
+        padding: 28px 22px;
+    }
+
+    .guest-welcome-overlay h1 {
+        font-size: 28px;
+    }
+
+    .guest-welcome-overlay p {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 600px) {
+    .recommended-item {
+        width: 220px;
+    }
 }
