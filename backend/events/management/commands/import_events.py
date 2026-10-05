@@ -23,6 +23,20 @@ HEADERS = {
     ),
     "Accept": "image/webp,image/,/*;q=0.8",
 }
+VALID_STATUSES = {choice[0] for choice in Event.STATUS_CHOICES}
+
+def parse_dt(value):
+
+    if not value:
+        return None
+
+    parsed = parse_datetime(value)
+
+    if parsed and timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+
+    return parsed
+
 
 def detect_image_type(data: bytes):
     if data.startswith(b"\xff\xd8\xff"):
@@ -68,6 +82,7 @@ class Command(BaseCommand):
         created = 0
         updated = 0
         skipped_finished = 0
+        skipped_no_date = 0
         media_url = settings.MEDIA_URL
 
         for data in events:
@@ -77,9 +92,18 @@ class Command(BaseCommand):
             if category_name:
                 category, _ = Category.objects.get_or_create(name=category_name)
 
-            raw_dt = parse_datetime(data["date"])
-            if raw_dt and timezone.is_naive(raw_dt):
-                raw_dt = timezone.make_aware(raw_dt, timezone.get_current_timezone())
+            start_dt = parse_dt(data.get("start_date"))
+            end_dt = parse_dt(data.get("end_date"))
+
+            if start_dt is None:
+                skipped_no_date += 1
+                self.stdout.write(self.style.WARNING(
+                    f"Preskocen (nema datuma): {data.get('title')}"
+                ))
+                continue
+
+            if end_dt and end_dt < start_dt:
+                end_dt = None
 
             sources = data.get("sources")
             if not sources and data.get("source_url"):
@@ -104,7 +128,7 @@ class Command(BaseCommand):
             if existing_event is None:
                 existing_event = Event.objects.filter(
                     title=data["title"],
-                    date=raw_dt,
+                    start_date=start_dt,
                     location=data["location"],
                 ).first()
 
@@ -149,7 +173,8 @@ class Command(BaseCommand):
                 "title": data["title"],
                 "description": data.get("description", ""),
                 "location": data["location"],
-                "date": raw_dt,
+                "start_date": start_dt,
+                "end_date": end_dt,
                 "latitude": data.get("latitude"),
                 "longitude": data.get("longitude"),
                 #"image": image_url,
@@ -170,7 +195,11 @@ class Command(BaseCommand):
                     updated += 1
                     event = existing_event
             else:
-                event = Event.objects.create(**defaults, image="")
+                status = data.get("status")
+                if status not in VALID_STATUSES:
+                    status = "active"
+
+                event = Event.objects.create(**defaults, image="", status=status)
                 created += 1
 
 

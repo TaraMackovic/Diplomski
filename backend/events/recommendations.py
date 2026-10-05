@@ -124,7 +124,7 @@ def build_user_profile_vector(
         saved_event_rows = list(
             SavedEvent.objects.filter(user=user)
             .select_related("event")
-            .values_list("event_id", "event__date")
+            .values_list("event_id", "event__start_date")
         )
 
     if reference_date is None:
@@ -206,14 +206,14 @@ def get_cold_start_recommendations(user=None, top_n=10):
 
     qs = Event.objects.select_related("category").filter(
         status="active",
-        date__gte=now,
-        date__lte=now + timedelta(days=30),
+        start_date__gte=now,
+        start_date__lte=now + timedelta(days=30),
     )
 
     events = list(qs)
     if not events:
         events = list(
-            Event.objects.select_related("category").filter(status="active", date__gte=now)[:50]
+            Event.objects.select_related("category").filter(status="active", start_date__gte=now)[:50]
         )
 
     if not events:
@@ -222,7 +222,7 @@ def get_cold_start_recommendations(user=None, top_n=10):
     keywords = get_interest_keywords_for_user(user) if user else set()
 
     def weight_for(e):
-        days_until = max((e.date - now).days, 1)
+        days_until = max((e.start_date - now).days, 1)
         date_weight = 1 / days_until
         interest_boost = 3.0 if event_matches_keywords(e, keywords) else 1.0
         return date_weight * interest_boost
@@ -238,7 +238,7 @@ def get_recommendations_for_user(user, top_n=10, exclude_ids=None):
     saved_rows = list(
         SavedEvent.objects.filter(user=user)
         .select_related("event")
-        .values_list("event_id", "event__date", "event__category_id")
+        .values_list("event_id", "event__start_date", "event__category_id")
     )
     saved_ids = {r[0] for r in saved_rows}
     has_interests = bool(get_interest_keywords_for_user(user))
@@ -258,7 +258,7 @@ def get_recommendations_for_user(user, top_n=10, exclude_ids=None):
 
     exclude_ids = set(exclude_ids or []) | saved_ids
 
-    candidate_qs = Event.objects.filter(status="active", date__gte=now).select_related("category")
+    candidate_qs = Event.objects.filter(status="active", start_date__gte=now).select_related("category")
     candidates = [e for e in candidate_qs if e.id in indices and e.id not in exclude_ids]
     if not candidates:
         return []

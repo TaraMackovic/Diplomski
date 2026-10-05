@@ -20,7 +20,7 @@ from .recommendations import get_similar_events, get_recommendations_for_user, g
 @api_view(["GET"])
 def all_events(request):
 
-    events = Event.objects.filter(status="active").order_by("date")
+    events = Event.objects.filter(status="active").order_by("start_date")
 
     serializer = EventSerializer(events, many=True)
 

@@ -151,7 +151,7 @@ def classify_category(title, description, source_category):
         return "festival"
     return "ostalo"
 
-# 5.5 TAGOVI (finija granulacija unutar kategorije)
+# 5.5 TAGOVI 
 ##################################################
 
 TAG_RULES = [
@@ -187,7 +187,6 @@ def extract_tags(title, description, category):
                 tags.add(tag)
                 break
 
-    # kategorija sama po sebi je koristan tag za soup u recommendations.py
     if category:
         tags.add(category)
 
@@ -196,13 +195,21 @@ def extract_tags(title, description, category):
 # 6. PRIPREMA ZAPISA 
 ####################
 
+def parse_iso(value):
+    if not value:
+        return None
+
+    try:
+        return datetime.fromisoformat(value)
+    except Exception:
+        return None
+
+
 def prepare(records):
     prepped = []
     for r in records:
-        try:
-            dt = datetime.fromisoformat(r["date"])
-        except Exception:
-            dt = None
+        dt = parse_iso(r.get("start_date") or r.get("date"))
+        end_dt = parse_iso(r.get("end_date"))
         desc = dedupe_description(r.get("description", ""))
         time_known = bool(dt) and not (dt.hour == 0 and dt.minute == 0 and dt.second == 0)
 
@@ -216,7 +223,8 @@ def prepare(records):
             "location": r.get("location", "").strip(),
             "latitude": r.get("latitude"),
             "longitude": r.get("longitude"),
-            "date": dt,
+            "date": dt,         
+            "end_date": end_dt,  
             "time_known": time_known,
             "image": r.get("image"),
             "price": r.get("price") or 0,
@@ -282,6 +290,27 @@ def cluster(records):
 # 8. SPAJANJE GRUPE U JEDAN ZAPIS
 #################################
 
+def pick_end_date(members, final_start):
+    candidates = [m for m in members if m.get("end_date") is not None]
+
+    if final_start:
+        # end ne smije biti prije pocetka, a isti dan kao pocetak nema smisla cuvati
+        candidates = [
+            m for m in candidates
+            if m["end_date"] >= final_start and m["end_date"].date() != final_start.date()
+        ]
+
+    if not candidates:
+        return None
+
+    best = max(
+        candidates,
+        key=lambda m: (SOURCE_PRIORITY.get(m["source"], 0), m["end_date"])
+    )
+
+    return best["end_date"]
+
+
 def merge_cluster(members):
     def rank(m):
         return (-SOURCE_PRIORITY.get(m["source"], 0),)
@@ -303,6 +332,8 @@ def merge_cluster(members):
     else:
         chosen = members[0]
     final_date = chosen["date"]
+
+    final_end_date = pick_end_date(members, final_date)
 
     best_loc_member = max(members, key=lambda m: (SOURCE_PRIORITY.get(m["source"], 0), len(m["location"] or "")))
     location = best_loc_member["location"]
@@ -339,7 +370,8 @@ def merge_cluster(members):
         "location": location,
         "latitude": lat,
         "longitude": lon,
-        "date": final_date.isoformat() if final_date else None,
+        "start_date": final_date.isoformat() if final_date else None,
+        "end_date": final_end_date.isoformat() if final_end_date else None,
         "price": price,
         "image": images[0] if images else None,
         "images_all": images,
@@ -355,7 +387,7 @@ def main():
     prepped = prepare(raw)
     clusters = cluster(prepped)
     merged = [merge_cluster(c["members"]) for c in clusters]
-    merged.sort(key=lambda e: (e["date"] is None, e["date"] or ""))
+    merged.sort(key=lambda e: (e["start_date"] is None, e["start_date"] or ""))
 
     output_file = DATA_DIR / "merged_events.json"
 

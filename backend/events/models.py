@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -28,7 +29,8 @@ class Event(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
-    date = models.DateTimeField()
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(null=True, blank=True)
     time_known = models.BooleanField(default=True)
 
     image = models.URLField(max_length=500, blank=True, null=True)
@@ -54,13 +56,17 @@ class Event(models.Model):
     )
 
     class Meta:
-        ordering = ["date"]
+        ordering = ["start_date"]
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "date", "location"],
+                fields=["title", "start_date", "location"],
                 name="unique_event",
             )
         ]
+
+    def clean(self):
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "Kraj ne može biti prije početka."})
 
     def __str__(self):
         return self.title

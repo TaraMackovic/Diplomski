@@ -15,10 +15,11 @@ class Command(BaseCommand):
 
         saved_events = SavedEvent.objects.filter(
             reminder_sent=False,
-            event__date__date__gte=today,
-            event__date__date__lte=cutoff_date,
+            event__start_date__date__gte=today,
+            event__start_date__date__lte=cutoff_date,
             event__status="active",
         ).select_related("event", "user__profile")
+
         for saved in saved_events:
             profile = getattr(saved.user, "profile", None)
 
