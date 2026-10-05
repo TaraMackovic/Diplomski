@@ -8,6 +8,8 @@ import saveIcon from "../assets/icons/icon_to_save.png";
 import unsaveIcon from "../assets/icons/icon_to_unsave.png";
 import placeholder from "../assets/icons/welcome_logo.png";
 
+import { formatEventDate } from "../utils/formatEventDate";
+
 import "../styles/EventCard.css";
 
 function EventCard({ event }) {
@@ -53,7 +55,7 @@ function EventCard({ event }) {
                 text:
                     `${event.title}\n` +
                     `${event.location}\n` +
-                    `${event.date}`,
+                    `${dateLabel}`,
             });
         } else {
             navigator.clipboard.writeText(
@@ -78,23 +80,7 @@ function EventCard({ event }) {
         }
     };
 
-    const formatDate = (date) => {
-
-        try {
-
-            return new Date(date).toLocaleString("sr-BA",{
-
-                day:"2-digit",
-                month:"2-digit",
-                year:"numeric",
-                hour:"2-digit",
-                minute:"2-digit"
-
-            });
-        } catch {
-            return date;
-        }
-    };
+    const dateLabel = formatEventDate(event.start_date, event.end_date, { timeKnown: event.time_known });
 
     return (
         <div
@@ -123,7 +109,7 @@ function EventCard({ event }) {
                 <div className="event-footer">
                     <div>
                         <div className="event-date">
-                            {formatDate(event.date)}
+                            {dateLabel}
                         </div>
                         <div className="event-location">
                             {event.location}

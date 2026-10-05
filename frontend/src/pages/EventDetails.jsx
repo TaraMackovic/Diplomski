@@ -5,6 +5,8 @@ import iconToSave from "../assets/icons/icon_to_save.png";
 import iconToUnsave from "../assets/icons/icon_to_unsave.png";
 import EventMap from "../components/EventMap";
 import GuestAccess from "../components/GuestAccess";
+import { formatEventDate } from "../utils/formatEventDate";
+
 import "../styles/EventDetails.css";
 
 function EventDetails() {
@@ -17,6 +19,7 @@ function EventDetails() {
     const [isSaved, setIsSaved] = useState(false);
     const [similarEvents, setSimilarEvents] = useState([]);
     const [showAuth, setShowAuth] = useState(false);
+    const [showFullDescription, setShowFullDescription] = useState(false);
 
     useEffect(() => {
         loadEvent();
@@ -65,7 +68,7 @@ function EventDetails() {
 
     const shareEvent = async () => {
         const shareText = `${event.title}\n${event.location}\n${new Date(
-            event.date
+            dateLabel
         ).toLocaleString()}\n\n${event.description}`;
 
         if (navigator.share) {
@@ -92,111 +95,122 @@ function EventDetails() {
     if (loading) return <h2>Loading event...</h2>;
     if (error) return <h2>{error}</h2>;
     if (!event) return <h2>Događaj ne postoji</h2>;
+
+    const dateLabel = formatEventDate(event.start_date, event.end_date, {
+        timeKnown: event.time_known, month: "long", locale: "sr-Latn-RS",
+    });
     
     return (
         <div className="event-details-page">
-            <div className="event-details-topbar">
-                <button className="icon-btn" onClick={() => navigate(-1)}>‹ Nazad</button>
-            </div>
-
-            <div className="event-details-layout">
-                {/* LIJEVA KOLONA — slika + opis + mapa */}
-                <div className="event-details-left">
-                    <img
-                        className="event-details-image"
-                        src={event.image || "https://via.placeholder.com/800x400"}
-                        alt={event.title}
-                    />
-
-                    <h2 className="event-title">{event.title}</h2>
-
-                    <div className="event-meta-row">
-                        <span className="event-location">📍 {event.location}</span>
-                        <span className="event-date">
-                            📅 {new Date(event.date).toLocaleString("sr-RS", {
-                                day: "2-digit",
-                                month: "long",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </span>
-                    </div>
-
-                    <hr />
-
-                    <h3>Opis događaja:</h3>
-                    <p className="event-description">
-                        {event.description}
-                    </p>
-
-                    {event.latitude && event.longitude && (
-                        <>
-                            <hr />
-                            <h3>Lokacija na mapi:</h3>
-                            <EventMap
-                                latitude={event.latitude}
-                                longitude={event.longitude}
-                                title={event.title}
-                                location={event.location}
-                            />
-                        </>
-                    )}
+            <div className="event-details-container">
+                <div className="event-details-topbar">
+                    <button className="icon-btn" onClick={() => navigate(-1)}>‹ Nazad</button>
                 </div>
 
-                {/* DESNA KOLONA — info kartica + slicni dogadjaji */}
-                <div className="event-details-right">
-                    <div className="event-sidebar-card">
-                    
+                <div className="event-details-layout">
+                    {/* LIJEVA KOLONA — slika + opis + mapa */}
+                    <div className="event-details-left">
+                        <h2 className="event-title">{event.title}</h2>
 
-                        {event.status !== "active" && (
-                            <p className="event-status">
-                                Status: {event.status === "cancelled" ? "Otkazan" : "Završen"}
-                            </p>
+                        <img
+                            className="event-details-image"
+                            src={event.image || "https://via.placeholder.com/800x400"}
+                            alt={event.title}
+                        />                    
+
+                        <div className="event-meta-row">
+                            <span className="event-location">Lokacija: {event.location}</span>
+                            <span className="event-date">
+                                Datum: {dateLabel}
+                            </span>
+                        </div>
+
+                        <hr />
+
+                        <h3>Opis događaja:</h3>
+                        <p className="event-description">
+                            {showFullDescription
+                                ? event.description
+                                : `${event.description.slice(0, 600)}${event.description.length > 600 ? "..." : ""}`}
+                        </p>
+
+                        {event.description.length > 600 && (
+                            <button
+                                className="description-toggle-btn"
+                                onClick={() => setShowFullDescription(!showFullDescription)}
+                            >
+                                {showFullDescription ? "Prikaži manje" : "Prikaži više"}
+                            </button>
                         )}
 
-                        <button className="save-toggle-btn" onClick={toggleSave}>
-                            <img src={isSaved ? iconToUnsave : iconToSave} alt="save" />
-                            {isSaved ? "Sačuvano" : "Sačuvaj događaj"}
-                        </button>
-
-                        <button className="share-btn" onClick={shareEvent}>
-                            ⤴ Podijeli
-                        </button>
+                        {event.latitude && event.longitude && (
+                            <>
+                                <hr />
+                                <h3>Lokacija na mapi:</h3>
+                                <EventMap
+                                    latitude={event.latitude}
+                                    longitude={event.longitude}
+                                    title={event.title}
+                                    location={event.location}
+                                />
+                            </>
+                        )}
                     </div>
 
-                    {similarEvents.length > 0 && (
-                        <div className="similar-sidebar-card">
-                            <h3>Slični događaji</h3>
-                            <div className="similar-events-list">
-                                {similarEvents.map((ev) => (
-                                    <div
-                                        key={ev.id}
-                                        className="similar-event-row"
-                                        onClick={() => navigate(`/events/${ev.id}`)}
-                                    >
-                                        <img
-                                            src={ev.image || "https://via.placeholder.com/80"}
-                                            alt={ev.title}
-                                        />
-                                        <div className="similar-event-info">
-                                            <p className="similar-event-title">{ev.title}</p>
-                                            <span className="similar-event-date">
-                                                {new Date(ev.date).toLocaleDateString("sr-RS", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+                    {/* DESNA KOLONA — info kartica + slicni dogadjaji */}
+                    <div className="event-details-right">
+                        <div className="event-sidebar-card">
+                        
 
-            {showAuth && <GuestAccess onClose={() => setShowAuth(false)} />}
+                            {event.status !== "active" && (
+                                <p className="event-status">
+                                    Status: {event.status === "cancelled" ? "Otkazan" : "Završen"}
+                                </p>
+                            )}
+
+                            <button className="save-toggle-btn" onClick={toggleSave}>
+                                <img src={isSaved ? iconToUnsave : iconToSave} alt="save" />
+                                {isSaved ? "Sačuvano" : "Sačuvaj događaj"}
+                            </button>
+
+                            <button className="share-btn" onClick={shareEvent}>
+                                ⤴ Podijeli
+                            </button>
+                        </div>
+
+                        {similarEvents.length > 0 && (
+                            <div className="similar-sidebar-card">
+                                <h3>Slični događaji</h3>
+                                <div className="similar-events-list">
+                                    {similarEvents.map((ev) => (
+                                        <div
+                                            key={ev.id}
+                                            className="similar-event-row"
+                                            onClick={() => navigate(`/events/${ev.id}`)}
+                                        >
+                                            <img
+                                                src={ev.image || "https://via.placeholder.com/80"}
+                                                alt={ev.title}
+                                            />
+                                            <div className="similar-event-info">
+                                                <p className="similar-event-title">{ev.title}</p>
+                                                <span className="similar-event-date">
+                                                    {new Date(ev.start_date).toLocaleDateString("sr-Latn-RS", {
+                                                        day: "2-digit",
+                                                        month: "short",
+                                                    })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {showAuth && <GuestAccess onClose={() => setShowAuth(false)} />}
+            </div>
         </div>
     );
 }
