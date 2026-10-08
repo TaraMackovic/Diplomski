@@ -32,7 +32,6 @@ TARGET_CITIES = [
     "BANJALUKA",
     "LAKTAŠI",
     "ČELINAC",
-    "PRNJAVOR",
 ]
 
 MAX_PAGES_PER_CATEGORY = 15
