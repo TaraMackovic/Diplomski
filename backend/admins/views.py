@@ -1,3 +1,7 @@
+import os
+import uuid
+from django.core.files.storage import default_storage
+
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -41,6 +45,29 @@ def paginate(queryset, request, default_size=20):
         "total": total,
         "total_pages": total_pages,
     }
+
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  
+NULLABLE_FIELDS = ("end_date", "latitude", "longitude")
+
+def build_event_data(request):
+    data = {k: v for k, v in request.data.items()}
+
+    for field in NULLABLE_FIELDS:
+        if data.get(field) == "":
+            data[field] = None
+
+    image = request.FILES.get("image")
+    if image:
+        if not (image.content_type or "").startswith("image/"):
+            return None, Response({"image": ["Fajl mora biti slika."]}, status=400)
+        if image.size > MAX_IMAGE_SIZE:
+            return None, Response({"image": ["Slika je prevelika (maksimalno 10 MB)."]}, status=400)
+
+        ext = os.path.splitext(image.name)[1].lower() or ".jpg"
+        path = default_storage.save(f"event_images/{uuid.uuid4().hex}{ext}", image)
+        data["image"] = default_storage.url(path).split("?")[0]
+
+    return data, None
 
 def serialize_admin_user(user, saved_count=None):
     profile = getattr(user, "profile", None)
@@ -293,7 +320,6 @@ def admin_analytics(request):
         "total_saved_events": SavedEvent.objects.count(),
     })
 
-
 @api_view(["GET", "POST"])
 @permission_classes([IsAdminUser])
 def admin_events(request):
@@ -345,7 +371,11 @@ def admin_events(request):
             "meta": meta,
         })
 
-    serializer = AdminEventSerializer(data=request.data)
+    data, error = build_event_data(request)
+    if error:
+        return error
+
+    serializer = AdminEventSerializer(data=data)
 
     if serializer.is_valid():
         serializer.save()
@@ -365,7 +395,11 @@ def admin_event_detail(request, id):
         return Response(AdminEventSerializer(event).data)
 
     if request.method == "PUT":
-        serializer = AdminEventSerializer(event, data=request.data, partial=True)
+        data, error = build_event_data(request)
+        if error:
+            return error
+
+        serializer = AdminEventSerializer(event, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

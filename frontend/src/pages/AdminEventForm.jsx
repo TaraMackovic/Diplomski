@@ -1,7 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import LocationPicker from "../components/LocationPicker";
 import "../styles/AdminPanel.css";
+
+const COUNTRY_CODES = "";
+const round6 = (n) => Number(n).toFixed(6);
+
+async function geocodeAddress(query) {
+    const country = COUNTRY_CODES ? `&countrycodes=${COUNTRY_CODES}` : "";
+    const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=bs${country}&q=${encodeURIComponent(query)}`
+    );
+    if (!res.ok) throw new Error("Geocoding failed");
+    const data = await res.json();
+    if (!data.length) return null;
+    return { lat: round6(data[0].lat), lng: round6(data[0].lon) };
+}
+
+async function reverseGeocode(lat, lng) {
+    const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=bs&lat=${lat}&lon=${lng}`
+    );
+    if (!res.ok) throw new Error("Reverse geocoding failed");
+    const data = await res.json();
+    const a = data.address || {};
+
+    const isPoi = !["place", "boundary", "highway"].includes(data.category);
+    const place = isPoi ? data.name || "" : "";
+
+    const street = a.road ? (a.house_number ? `${a.road} ${a.house_number}` : a.road) : "";
+
+    const area = street ? "" : a.suburb || a.neighbourhood || a.city_district || "";
+
+    const city = a.city || a.town || a.village || a.municipality || "";
+
+    const parts = [place, street, area, city].filter(Boolean);
+    const unique = parts.filter((p, i) => parts.indexOf(p) === i);
+
+    return unique.length ? unique.join(", ") : data.display_name || "";
+}
 
 function toDatetimeLocal(value) {
     if (!value) return "";
@@ -16,9 +54,12 @@ function AdminEventForm() {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
+    const geocodedFor = useRef("");
+
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(isEdit);
     const [saving, setSaving] = useState(false);
+    const [geocoding, setGeocoding] = useState(false);
     const [error, setError] = useState("");
 
     const [imageFile, setImageFile] = useState(null);
@@ -72,6 +113,8 @@ function AdminEventForm() {
                 status: e.status,
                 tags: e.tags || "",
             });
+            geocodedFor.current =
+                e.latitude != null && e.longitude != null ? (e.location || "").trim() : "";
             setImageFile(null);
             setImagePreview(e.image || "");
         } catch (err) {
@@ -84,7 +127,7 @@ function AdminEventForm() {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+        setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
     };
 
     const handleImageChange = (e) => {
@@ -103,18 +146,52 @@ function AdminEventForm() {
         setImagePreview("");
     };
 
+    const handleFindLocation = async () => {
+        const query = form.location.trim();
+        if (!query) {
+            setError("Unesite lokaciju koju želite pronaći.");
+            return;
+        }
+        setError("");
+        setGeocoding(true);
+        try {
+            const result = await geocodeAddress(query);
+            if (!result) {
+                setError("Lokacija nije pronađena. Pokušajte preciznije ili označite na mapi.");
+                return;
+            }
+            geocodedFor.current = query;
+            setForm((f) => ({ ...f, latitude: result.lat, longitude: result.lng }));
+        } catch (err) {
+            console.log(err);
+            setError("Greška prilikom pretrage lokacije.");
+        } finally {
+            setGeocoding(false);
+        }
+    };
+
+    const handleMapPick = async (lat, lng) => {
+        const latStr = round6(lat);
+        const lngStr = round6(lng);
+        setError("");
+        setForm((f) => ({ ...f, latitude: latStr, longitude: lngStr }));
+        try {
+            const address = await reverseGeocode(latStr, lngStr);
+            if (address) {
+                geocodedFor.current = address.trim();
+                setForm((f) => ({ ...f, location: address }));
+            }
+        } catch (err) {
+            console.log(err); 
+        }
+    };
+
     const validate = () => {
         if (!form.title.trim()) return "Naslov je obavezan.";
         if (!form.location.trim()) return "Lokacija je obavezna.";
         if (!form.start_date) return "Datum početka je obavezan.";
         if (form.end_date && form.end_date < form.start_date) return "Kraj ne može biti prije početka.";
         if (form.price !== "" && Number(form.price) < 0) return "Cijena ne može biti negativna.";
-        if (form.latitude && (Number(form.latitude) < -90 || Number(form.latitude) > 90)) {
-            return "Latitude mora biti između -90 i 90.";
-        }
-        if (form.longitude && (Number(form.longitude) < -180 || Number(form.longitude) > 180)) {
-            return "Longitude mora biti između -180 i 180.";
-        }
         return "";
     };
 
@@ -128,6 +205,32 @@ function AdminEventForm() {
             return;
         }
 
+        setSaving(true);
+
+        let latitude = form.latitude;
+        let longitude = form.longitude;
+        const locationText = form.location.trim();
+
+        if (!latitude || !longitude || locationText !== geocodedFor.current) {
+            try {
+                const result = await geocodeAddress(locationText);
+                if (!result) {
+                    setError("Lokacija nije pronađena. Provjerite naziv ili je označite na mapi.");
+                    setSaving(false);
+                    return;
+                }
+                latitude = result.lat;
+                longitude = result.lng;
+                geocodedFor.current = locationText;
+                setForm((f) => ({ ...f, latitude, longitude }));
+            } catch (err) {
+                console.log(err);
+                setError("Greška prilikom pretrage lokacije.");
+                setSaving(false);
+                return;
+            }
+        }
+
         const data = new FormData();
         data.append("title", form.title);
         data.append("description", form.description);
@@ -138,17 +241,13 @@ function AdminEventForm() {
         data.append("price", form.price || 0);
         data.append("status", form.status);
         data.append("tags", form.tags);
+        data.append("latitude", latitude);
+        data.append("longitude", longitude);
 
         if (form.category) data.append("category", form.category);
-        if (form.latitude) data.append("latitude", form.latitude);
-        if (form.longitude) data.append("longitude", form.longitude);
-
-        if (imageFile) {
-            data.append("image", imageFile);
-        }
+        if (imageFile) data.append("image", imageFile);
 
         try {
-            setSaving(true);
             if (isEdit) {
                 await api.put(`/admin-api/events/${id}/`, data, {
                     headers: { "Content-Type": "multipart/form-data" },
@@ -238,24 +337,40 @@ function AdminEventForm() {
                     Vrijeme je poznato
                 </label>
 
-                <label>
-                    Lokacija
-                    <input name="location" value={form.location} onChange={handleChange} />
-                </label>
+                <div className="admin-location-field">
+                    <label htmlFor="admin-location-input">Lokacija</label>
+                    <div className="admin-location-row">
+                        <input
+                            id="admin-location-input"
+                            name="location"
+                            value={form.location}
+                            onChange={handleChange}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleFindLocation();
+                                }
+                            }}
+                            placeholder="npr. Zetra, Sarajevo"
+                        />
+                        <button
+                            type="button"
+                            className="admin-btn admin-btn-outline"
+                            onClick={handleFindLocation}
+                            disabled={geocoding}
+                        >
+                            {geocoding ? "Tražim..." : "Pronađi na mapi"}
+                        </button>
+                    </div>
 
-                <div className="admin-form-row">
-                    <div>
-                        <label>
-                            Latitude
-                            <input type="number" step="any" name="latitude" value={form.latitude} onChange={handleChange} />
-                        </label>
-                    </div>
-                    <div>
-                        <label>
-                            Longitude
-                            <input type="number" step="any" name="longitude" value={form.longitude} onChange={handleChange} />
-                        </label>
-                    </div>
+                    <LocationPicker
+                        latitude={form.latitude}
+                        longitude={form.longitude}
+                        onPick={handleMapPick}
+                    />
+                    <p className="admin-hint">
+                        Upišite lokaciju i kliknite „Pronađi na mapi“, ili kliknite direktno na mapu da izaberete tačnu poziciju.
+                    </p>
                 </div>
 
                 <div className="admin-photo-field">
@@ -306,8 +421,6 @@ function AdminEventForm() {
                         onChange={handleImageChange}
                         className="admin-photo-input-hidden"
                     />
-
-                   
                 </div>
 
                 <label>
