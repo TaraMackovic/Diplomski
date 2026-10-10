@@ -3,6 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import LocationPicker from "../components/LocationPicker";
 import "../styles/AdminPanel.css";
+import "../styles/AdminEventForm.css";
+
+import iconTitle from "../assets/icons/icon_title.png";
+import iconDescription from "../assets/icons/icon_description.png";
+import iconCategory from "../assets/icons/icon_category.png";
+import iconStatus from "../assets/icons/icon_status.png";
+import iconCalendar from "../assets/icons/icon_calendar.png";
+import iconPrice from "../assets/icons/icon_price.png";
+import iconTime from "../assets/icons/icon_time.png";
+import iconTag from "../assets/icons/icon_tag.png";
+import iconLocation from "../assets/icons/icon_location.png";
 
 const COUNTRY_CODES = "";
 const round6 = (n) => Number(n).toFixed(6);
@@ -47,6 +58,46 @@ function toDatetimeLocal(value) {
     const pad = (n) => String(n).padStart(2, "0");
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+function DateTimeInput({ placeholder, ...props }) {
+    return (
+        <span className="dt-wrap">
+            <input type="datetime-local" {...props} />
+            {!props.value && <span className="dt-placeholder">{placeholder}</span>}
+        </span>
+    );
+}
+
+const ICONS = {
+    title: iconTitle,
+    pencil: iconDescription,
+    category: iconCategory,
+    status: iconStatus,
+    calendar: iconCalendar,
+    wallet: iconPrice,
+    clock: iconTime,
+    tag: iconTag,
+    pin: iconLocation,
+};
+
+function Icon({ name }) {
+    return <img src={ICONS[name]} alt="" />;
+}
+
+function Field({ icon, label, children }) {
+    return (
+        <label className="fcard">
+            <span className="fcard-icon">
+                <Icon name={icon} />
+            </span>
+            <span className="fcard-body">
+                <span className="fcard-label">{label}</span>
+                {children}
+            </span>
+        </label>
+    );
+}
+
 
 function AdminEventForm() {
     const { id } = useParams();
@@ -182,7 +233,7 @@ function AdminEventForm() {
                 setForm((f) => ({ ...f, location: address }));
             }
         } catch (err) {
-            console.log(err); 
+            console.log(err);
         }
     };
 
@@ -278,164 +329,216 @@ function AdminEventForm() {
         <div>
             <h1 className="admin-page-title">{isEdit ? "Uredi događaj" : "Novi događaj"}</h1>
 
-            <form className="admin-form" onSubmit={handleSubmit}>
-                <label>
-                    Naslov
-                    <input name="title" value={form.title} onChange={handleChange} />
-                </label>
+            <form className="admin-form admin-event-form" onSubmit={handleSubmit}>
+                <div className="admin-form-grid">
+                    
+                    <div className="admin-form-col">
+                        <Field icon="title" label="Naslov">
+                            <input name="title" value={form.title} onChange={handleChange} placeholder="Naziv događaja" />
+                        </Field>
 
-                <label>
-                    Opis
-                    <textarea name="description" rows={4} value={form.description} onChange={handleChange} />
-                </label>
-
-                <div className="admin-form-row">
-                    <div>
-                        <label>
-                            Kategorija
-                            <select name="category" value={form.category} onChange={handleChange}>
-                                <option value="">Bez kategorije</option>
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
-                    <div>
-                        
-                        <label>Početak događaja
-                            <input type="datetime-local" name="start_date" value={form.start_date} onChange={handleChange} />
-                        </label>
-                    </div>
-                </div>
-
-                <div className="admin-form-row">
-                    <div>       
-                        <label>
-                            Status
-                            <select name="status" value={form.status} onChange={handleChange}>
-                                <option value="active">Aktivan</option>
-                                <option value="cancelled">Otkazan</option>
-                                <option value="finished">Završen</option>
-                            </select>
-                        </label>
-                        <label className="price-field">
-                            Cijena (KM)
-                            <input type="number" min="0" step="0.01" name="price" value={form.price} onChange={handleChange} />
-                        </label>
-                    </div>
-                    <div>
-                        
-                        <label>Kraj događaja
-                            <input type="datetime-local" name="end_date" min={form.start_date} value={form.end_date} onChange={handleChange} />
-                        </label>
-                    </div>
-                </div>
-
-                <label className="admin-checkbox-row">
-                    <input type="checkbox" name="time_known" checked={form.time_known} onChange={handleChange} />
-                    Vrijeme je poznato
-                </label>
-
-                <div className="admin-location-field">
-                    <label htmlFor="admin-location-input">Lokacija</label>
-                    <div className="admin-location-row">
-                        <input
-                            id="admin-location-input"
-                            name="location"
-                            value={form.location}
-                            onChange={handleChange}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleFindLocation();
-                                }
-                            }}
-                            placeholder="npr. Zetra, Sarajevo"
-                        />
-                        <button
-                            type="button"
-                            className="admin-btn admin-btn-outline"
-                            onClick={handleFindLocation}
-                            disabled={geocoding}
-                        >
-                            {geocoding ? "Tražim..." : "Pronađi na mapi"}
-                        </button>
-                    </div>
-
-                    <LocationPicker
-                        latitude={form.latitude}
-                        longitude={form.longitude}
-                        onPick={handleMapPick}
-                    />
-                    <p className="admin-hint">
-                        Upišite lokaciju i kliknite „Pronađi na mapi“, ili kliknite direktno na mapu da izaberete tačnu poziciju.
-                    </p>
-                </div>
-
-                <div className="admin-photo-field">
-                    <label>Slika događaja</label>
-
-                    <div className="admin-photo-box" onClick={handleChooseImageClick}>
-                        {imagePreview ? (
-                            <img
-                                src={imagePreview}
-                                alt="Pregled slike"
-                                className="admin-photo-box-preview"
+                        <Field icon="pencil" label="Opis">
+                            <textarea
+                                name="description"
+                                rows={3}
+                                value={form.description}
+                                onChange={handleChange}
+                                placeholder="Unesite opis događaja.."
                             />
-                        ) : (
-                            <svg
-                                className="admin-photo-box-icon"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
-                                <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
-                                <path
-                                    d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
-                                    stroke="#9aa0b4"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        )}
+                        </Field>
 
-                        <button
-                            type="button"
-                            className="admin-photo-box-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleChooseImageClick();
-                            }}
-                        >
-                            Izaberite sliku
-                        </button>
+                        <div className="fcard-row">
+                            <Field icon="category" label="Kategorija">
+                                <select name="category" value={form.category} onChange={handleChange}>
+                                    <option value="">Bez kategorije</option>
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </Field>
+
+                            <Field icon="status" label="Status">
+                                <select name="status" value={form.status} onChange={handleChange}>
+                                    <option value="active">Aktivan</option>
+                                    <option value="cancelled">Otkazan</option>
+                                    <option value="finished">Završen</option>
+                                </select>
+                            </Field>
+                        </div>
+
+                        <Field icon="tag" label="Tagovi (odvojeni zarezom)">
+                            <input
+                                name="tags"
+                                placeholder="muzika, festival"
+                                value={form.tags}
+                                onChange={handleChange}
+                            />
+                        </Field>
+                        <div className="admin-photo-field">
+                            <label>Slika događaja</label>
+
+                            <div
+                                className={`admin-photo-box${imagePreview ? " has-preview" : ""}`}
+                                onClick={handleChooseImageClick}
+                            >
+                                {imagePreview ? (
+                                    <img
+                                        src={imagePreview}
+                                        alt="Pregled slike"
+                                        className="admin-photo-box-preview"
+                                    />
+                                ) : (
+                                    <svg
+                                        className="admin-photo-box-icon"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="#9aa0b4" strokeWidth="1.5" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" stroke="#9aa0b4" strokeWidth="1.5" />
+                                        <path
+                                            d="M21 15l-5.5-5.5a2 2 0 0 0-2.83 0L3 19"
+                                            stroke="#9aa0b4"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                )}
+
+                                <button
+                                    type="button"
+                                    className="admin-photo-box-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleChooseImageClick();
+                                    }}
+                                >
+                                    Izaberite sliku
+                                </button>
+                            </div>
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="admin-photo-input-hidden"
+                            />
+                        </div>
                     </div>
 
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="admin-photo-input-hidden"
-                    />
-                </div>
+                    
 
-                <label>
-                    Tagovi (odvojeni zarezom)
-                    <input name="tags" placeholder="muzika, festival" value={form.tags} onChange={handleChange} />
-                </label>
+
+                    <div className="admin-form-col">
+                        <div className="fcard-row">
+                            <Field icon="calendar" label="Početak događaja">
+                                <DateTimeInput
+                                    name="start_date"
+                                    value={form.start_date}
+                                    onChange={handleChange}
+                                    placeholder="Odaberite datum"
+                                />
+                            </Field>
+
+                            <Field icon="calendar" label="Kraj događaja (opsiono)">
+                                <DateTimeInput
+                                    name="end_date"
+                                    min={form.start_date}
+                                    value={form.end_date}
+                                    onChange={handleChange}
+                                    placeholder="Odaberite datum"
+                                />
+                            </Field>
+                        </div>
+
+                        <div className="fcard-row">
+                            <Field icon="wallet" label="Cijena (KM)">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    name="price"
+                                    value={form.price}
+                                    onChange={handleChange}
+                                    placeholder="besplatni, 5.00, 25.00..."
+                                />
+                            </Field>
+
+                            <Field icon="clock" label="Vrijeme">
+                                <span className="fcard-check">
+                                    <input
+                                        type="checkbox"
+                                        name="time_known"
+                                        checked={form.time_known}
+                                        onChange={handleChange}
+                                    />
+                                    Vrijeme je poznato
+                                </span>
+                            </Field>
+                        </div>
+                        <div className="admin-location-field">
+                            <div className="fcard">
+                                <span className="fcard-icon">
+                                    <Icon name="pin" />
+                                </span>
+                                <div className="fcard-body">
+                                    <label className="fcard-label" htmlFor="admin-location-input">
+                                        Lokacija
+                                    </label>
+                                    <div className="admin-location-row">
+                                        <input
+                                            id="admin-location-input"
+                                            name="location"
+                                            value={form.location}
+                                            onChange={handleChange}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    handleFindLocation();
+                                                }
+                                            }}
+                                            placeholder="npr. Banja Luka, Borik"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="admin-btn admin-btn-outline fcard-find"
+                                            onClick={handleFindLocation}
+                                            disabled={geocoding}
+                                        >
+                                            {geocoding ? "Tražim..." : "Pronađi na mapi"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <LocationPicker
+                                latitude={form.latitude}
+                                longitude={form.longitude}
+                                onPick={handleMapPick}
+                            />
+                            <p className="admin-hint">
+                                Upišite lokaciju i kliknite „Pronađi na mapi“, ili kliknite direktno na mapu da izaberete tačnu poziciju.
+                            </p>
+                        </div>
+
+                        
+                    </div>
+                </div>
 
                 {error && <p className="admin-form-error">{error}</p>}
 
                 <div className="admin-row-actions">
-                    <button type="submit" className="admin-btn" disabled={saving}>
-                        {saving ? "Čuvanje..." : "Sačuvaj"}
-                    </button>
-                    <button type="button" className="admin-btn admin-btn-outline" onClick={() => navigate("/admin/events")}>
+                    <button
+                        type="button"
+                        className="admin-link-cancel"
+                        onClick={() => navigate("/admin/events")}
+                    >
                         Otkaži
+                    </button>
+                    <button type="submit" className="admin-btn admin-btn-pill" disabled={saving}>
+                        {saving ? "Čuvanje..." : isEdit ? "Sačuvaj" : "Kreiraj događaj"}
                     </button>
                 </div>
             </form>

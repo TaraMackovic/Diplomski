@@ -1,0 +1,283 @@
+.admin-event-form {
+    background: #ffffff;
+    border: 1px solid #ececf5;
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(52, 52, 93, 0.1), 0 2px 8px rgba(52, 52, 93, 0.06);
+    padding: 36px 40px;
+    max-width: 1600px;
+    gap: 22px;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 40px;
+    align-items: start;
+}
+
+.admin-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+.fcard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.admin-event-form .fcard {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 58px;
+    background: #fbfbfd;
+    border: 1.5px solid #e4e4ef;
+    border-radius: 16px;
+    padding: 8px 18px;
+    font-size: 15px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-event-form .fcard:focus-within {
+    border-color: #37388e;
+    background: #ffffff;
+}
+
+.fcard-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fcard-icon img {
+    width: 20px;
+    opacity: 0.55;
+}
+
+.fcard-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-event-form .fcard-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2c2c56;
+    cursor: inherit;
+}
+
+.admin-event-form .fcard input:not([type="checkbox"]),
+.admin-event-form .fcard select,
+.admin-event-form .fcard textarea {
+    width: 100%;
+    height: auto;
+    min-height: 22px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    font-size: 15px;
+    font-family: inherit;
+    color: #2c2c56;
+    outline: none;
+}
+
+.admin-event-form .fcard textarea {
+    resize: vertical;
+    line-height: 1.4;
+}
+
+.admin-event-form .fcard input::placeholder,
+.admin-event-form .fcard textarea::placeholder {
+    color: #a3a3b8;
+}
+
+.admin-event-form .fcard select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 24px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a7a95' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+}
+
+.admin-event-form .fcard input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    accent-color: #37388e;
+    cursor: pointer;
+}
+
+.fcard-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: #2c2c56;
+    cursor: pointer;
+}
+
+.admin-event-form .admin-location-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-event-form .fcard-find {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.admin-event-form .admin-location-field {
+    gap: 14px;
+}
+
+.admin-event-form .admin-photo-field {
+    gap: 10px;
+}
+
+.admin-event-form .admin-photo-field > label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #7a7a95;
+}
+
+.admin-event-form .admin-photo-box {
+    max-width: 300px;
+    aspect-ratio: 16 / 9;
+    flex-direction: column;
+    gap: 10px;
+    border: 1.5px dashed #d3d5e4;
+    border-radius: 16px;
+    background: #fbfbfd;
+}
+
+.admin-event-form .admin-photo-box-icon {
+    width: 34px;
+    height: 34px;
+}
+
+.admin-event-form .admin-photo-box-btn {
+    position: static;
+    padding: 6px 16px;
+    font-size: 13px;
+}
+
+.admin-event-form .admin-photo-box.has-preview .admin-photo-box-btn {
+    position: absolute;
+    bottom: 10px;
+}
+
+.admin-event-form .admin-row-actions {
+    justify-content: flex-end;
+    align-items: center;
+    gap: 24px;
+}
+
+.admin-link-cancel {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #EB5A5A;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-link-cancel:hover {
+    text-decoration: underline;
+}
+
+.admin-btn-pill {
+    min-width: 240px;
+    height: 54px;
+    border-radius: 16px;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 8px 20px rgba(55, 56, 142, 0.3);
+}
+
+
+.dt-wrap {
+    position: relative;
+    display: block;
+}
+
+.dt-placeholder {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 32px; 
+    display: flex;
+    align-items: center;
+    background: #fbfbfd;
+    color: #a3a3b8;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.admin-event-form .fcard:focus-within .dt-placeholder {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-event-form {
+        padding: 24px 18px;
+        border-radius: 22px;
+    }
+
+    .fcard-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-event-form .admin-row-actions {
+        justify-content: space-between;
+    }
+
+    .admin-btn-pill {
+        flex: 1;
+        min-width: 0;
+        height: 50px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 900px) {
+    .admin-event-form .admin-location-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-event-form .fcard-find {
+        align-self: flex-start;
+    }
+}
