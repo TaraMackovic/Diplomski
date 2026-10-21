@@ -14,10 +14,10 @@ MATRIX_PATH = os.path.join(CACHE_DIR, "tfidf_matrix.pkl")
 VECTORIZER_PATH = os.path.join(CACHE_DIR, "vectorizer.pkl")
 INDICES_PATH = os.path.join(CACHE_DIR, "indices.pkl")
 
-RECENCY_HALF_LIFE_DAYS = 120.0     
+RECENCY_HALF_LIFE_DAYS = 60.0     
 INTEREST_WEIGHT = 0.25        
 DESCRIPTION_MAX_CHARS = 500
-CATEGORY_WEIGHT = 0.3       
+CATEGORY_WEIGHT = 0.2    
 
 
 def create_event_soup(event):

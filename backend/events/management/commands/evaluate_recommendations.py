@@ -11,7 +11,10 @@ from events.models import Event, SavedEvent
 
 TOP_K_VALUES = [5, 10]
 MIN_SAVED_EVENTS = 5
-USERNAMES = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8"]
+USERNAMES = ["tase", "momir", "djordje", "nikola", "matija", "mitar", "vukasin", "teodor"]
+
+VAL_FRACTION = 0.15
+TEST_FRACTION = 0.15
 
 CATEGORY_BONUS_GRID = [0.10, 0.15, 0.20, 0.25, 0.30]
 RECENCY_HALF_LIFE_GRID = [60, 90, 120]
@@ -75,27 +78,34 @@ def ndcg_at_k(ranked_ids, relevant_ids, k):
 def split_user_events(user):
     saved_events = list(
         SavedEvent.objects
-        .filter(user=user, event__date__lt=timezone.now())
+        .filter(user=user, event__start_date__lt=timezone.now())
         .select_related("event", "event__category")
-        .order_by("event__date", "event_id")
+        .order_by("event__start_date", "event_id")
     )
     if len(saved_events) < MIN_SAVED_EVENTS:
         return None
-    split_index = int(len(saved_events) * 0.8)
-    return saved_events[:split_index], saved_events[split_index:]
+    n = len(saved_events)
+    test_start = int(n * (1 - TEST_FRACTION) + 1e-9)
+    val_start = int(n * (1 - TEST_FRACTION - VAL_FRACTION) + 1e-9)
+    train = saved_events[:val_start]
+    val = saved_events[val_start:test_start]
+    test = saved_events[test_start:]
+    if not train or not val or not test:
+        return None
+    return train, val, test
 
 
 def build_splits(users):
-    splits = {}
-    global_test_ids = set()
+    splits_val, splits_test = {}, {}
     for user in users:
         split = split_user_events(user)
         if split is None:
             continue
-        train_events, test_events = split
-        splits[user.id] = (user, train_events, test_events)
-        global_test_ids.update(se.event_id for se in test_events)
-    return splits, global_test_ids
+        train, val, test = split
+        sizes = (len(train), len(val))
+        splits_val[user.id] = (user, train, val, val[-1].event.start_date, sizes)
+        splits_test[user.id] = (user, train + val, test, test[-1].event.start_date, sizes)
+    return splits_val, splits_test
 
 
 def evaluate_users(score_fn, indices, splits):
@@ -103,10 +113,10 @@ def evaluate_users(score_fn, indices, splits):
     mrr_values = []
     per_user = []
 
-    for user, train_events, test_events in splits.values():
-        train_rows = [(se.event_id, se.event.date) for se in train_events if se.event_id in indices]
+    for user, train_events, test_events, candidate_end, (train_n, val_n) in splits.values():
+        train_rows = [(se.event_id, se.event.start_date) for se in train_events if se.event_id in indices]
         train_category_rows = [
-            (se.event_id, se.event.date, se.event.category_id)
+            (se.event_id, se.event.start_date, se.event.category_id)
             for se in train_events if se.event_id in indices
         ]
         train_ids = {eid for eid, _ in train_rows}
@@ -115,14 +125,14 @@ def evaluate_users(score_fn, indices, splits):
         if not train_rows or not test_ids:
             continue
 
-        reference_date = train_events[-1].event.date
+        reference_date = train_events[-1].event.start_date
 
         candidate_events = list(
             Event.objects
             .select_related("category")
-            .filter(date__gte=reference_date)
+            .filter(start_date__gte=reference_date, start_date__lte=candidate_end)
             .exclude(id__in=train_ids)
-            .order_by("date", "id")
+            .order_by("start_date", "id")
         )
         candidate_events = [e for e in candidate_events if e.id in indices]
         if not candidate_events:
@@ -134,14 +144,14 @@ def evaluate_users(score_fn, indices, splits):
 
         ranked = sorted(zip(candidate_events, scores), key=lambda x: (-x[1], x[0].id))
         ranked_ids = [event.id for event, _ in ranked]
-        ranked_events = {event.id: event for event, _ in ranked}
 
         mrr = reciprocal_rank(ranked_ids, test_ids)
         mrr_values.append(mrr)
 
         user_row = {
             "username": user.username,
-            "train_n": len(train_events),
+            "train_n": len(train_events) - val_n,
+            "val_n": val_n,
             "test_n": len(test_events),
             "mrr": mrr,
         }
@@ -196,15 +206,22 @@ def make_content_scorer(tfidf_matrix, vectorizer, indices):
     return score
 
 
-def make_popularity_scorer(exclude_event_ids):
-    counts = Counter(
-        SavedEvent.objects
-        .exclude(event_id__in=exclude_event_ids)
-        .values_list("event_id", flat=True)
-    )
+def make_popularity_scorer(splits):
+    event_users = {}
+
+    for user, history_events, _, _, _ in splits.values():
+        for saved_event in history_events:
+            event_users.setdefault(saved_event.event_id, set()).add(user.id)
 
     def score(user, train_rows, train_category_rows, reference_date, candidate_events):
-        return np.array([counts.get(e.id, 0) for e in candidate_events], dtype=float)
+        return np.array(
+            [
+                len(event_users.get(event.id, set()) - {user.id})
+                for event in candidate_events
+            ],
+            dtype=float,
+        )
+
     return score
 
 
@@ -222,7 +239,7 @@ def evaluate_config(beta, half_life, indices, tfidf_matrix, vectorizer, splits):
 
 
 class Command(BaseCommand):
-    help = "Grid-search, evaluacija i poređenje sa baseline modelima."
+    help = "Grid-search na validacionom skupu, evaluacija na test skupu i poređenje sa baseline modelima."
 
     def handle(self, *args, **options):
         original_beta = reco.CATEGORY_WEIGHT
@@ -232,21 +249,24 @@ class Command(BaseCommand):
         indices = data["indices"]
 
         users = list(User.objects.filter(username__in=USERNAMES))
-        splits, global_test_ids = build_splits(users)
+        splits_val, splits_test = build_splits(users)
 
         self.stdout.write("")
         self.stdout.write("PARAMETRI:")
         self.stdout.write(f"CATEGORY_BONUS_WEIGHT: {CATEGORY_BONUS_GRID}")
         self.stdout.write(f"RECENCY_HALF_LIFE_DAYS: {RECENCY_HALF_LIFE_GRID}")
         self.stdout.write(f"Glavna metrika: {PRIMARY_METRIC}")
-        self.stdout.write(f"Validnih korisnika u splitu: {len(splits)}")
+        self.stdout.write(
+            f"Podjela: trening {1 - VAL_FRACTION - TEST_FRACTION:.0%} / validacija {VAL_FRACTION:.0%} / test {TEST_FRACTION:.0%}"
+        )
+        self.stdout.write(f"Validnih korisnika u splitu: {len(splits_test)}")
         self.stdout.write("")
 
         rows = []
         try:
             for beta in CATEGORY_BONUS_GRID:
                 for half_life in RECENCY_HALF_LIFE_GRID:
-                    result = evaluate_config(beta, half_life, indices, tfidf_matrix, vectorizer, splits)
+                    result = evaluate_config(beta, half_life, indices, tfidf_matrix, vectorizer, splits_val)
                     rows.append((beta, half_life, result))
         finally:
             reco.CATEGORY_WEIGHT = original_beta
@@ -259,6 +279,7 @@ class Command(BaseCommand):
 
         best_beta, best_half_life, best = max(valid_rows, key=lambda r: r[2][PRIMARY_METRIC])
 
+        self.stdout.write("GRID SEARCH (Validacioni skup)")
         header = (
             f"{'beta':>6} {'half':>6} | {'P.5':>6} {'P.10':>6} | {'R.5':>6} {'R.10':>6} | "
             f"{'NDCG.5':>8} {'NDCG.10':>9} | {'MRR':>6} | STATUS"
@@ -276,34 +297,38 @@ class Command(BaseCommand):
             )
         self.stdout.write("-" * len(header))
         self.stdout.write(
-            f"Najbolji {PRIMARY_METRIC}: {best[PRIMARY_METRIC]:.3f} "
+            f"Najbolji {PRIMARY_METRIC} na validaciji: {best[PRIMARY_METRIC]:.3f} "
             f"(beta={best_beta}, half_life={best_half_life}, valid_users={best['valid_users']})"
         )
 
+        self.stdout.write("")
+        self.stdout.write(f"EVALUACIJA (Test skup, beta={best_beta}, half_life={best_half_life})")
+        self.stdout.write("")
+        try:
+            content_result = evaluate_config(best_beta, best_half_life, indices, tfidf_matrix, vectorizer, splits_test)
+            popularity_result = evaluate_users(make_popularity_scorer(splits_test), indices, splits_test)
+            category_only_result = evaluate_users(make_category_only_scorer(), indices, splits_test)
+        finally:
+            reco.CATEGORY_WEIGHT = original_beta
+            reco.RECENCY_HALF_LIFE_DAYS = original_half_life
+
+        self.stdout.write(f"Validnih korisnika na testu: {content_result['valid_users']}")
         self.stdout.write(
-            f"NDCG.10: {best['ndcg.10']:.3f} ± {best['ndcg.10_std']:.3f}"
+            f"NDCG.10: {content_result['ndcg.10']:.3f} ± {content_result['ndcg.10_std']:.3f}"
         )
         self.stdout.write(
-            f"P.10:    {best['precision.10']:.3f} ± {best['precision.10_std']:.3f}"
+            f"P.10:    {content_result['precision.10']:.3f} ± {content_result['precision.10_std']:.3f}"
         )
         self.stdout.write(
-            f"R.10:    {best['recall.10']:.3f} ± {best['recall.10_std']:.3f}"
+            f"R.10:    {content_result['recall.10']:.3f} ± {content_result['recall.10_std']:.3f}"
         )
         self.stdout.write(
-            f"MRR:     {best['mrr']:.3f} ± {best['mrr_std']:.3f}"
+            f"MRR:     {content_result['mrr']:.3f} ± {content_result['mrr_std']:.3f}"
         )
 
         self.stdout.write("")
-        self.stdout.write("POREĐENJE SA DRUGIM MODELIMA")
+        self.stdout.write("POREĐENJE SA DRUGIM MODELIMA (Test skup)")
         self.stdout.write("")
-        reco.CATEGORY_WEIGHT = best_beta
-        reco.RECENCY_HALF_LIFE_DAYS = best_half_life
-        content_result = evaluate_users(make_content_scorer(tfidf_matrix, vectorizer, indices), indices, splits)
-        reco.CATEGORY_WEIGHT = original_beta
-        reco.RECENCY_HALF_LIFE_DAYS = original_half_life
-
-        popularity_result = evaluate_users(make_popularity_scorer(global_test_ids), indices, splits)
-        category_only_result = evaluate_users(make_category_only_scorer(), indices, splits)
 
         baseline_header = f"{'model':>20} | {'P.10':>6} | {'R.10':>6} | {'NDCG.10':>9} | {'MRR':>6}"
         self.stdout.write(baseline_header)
@@ -319,11 +344,11 @@ class Command(BaseCommand):
             )
 
         self.stdout.write("")
-        self.stdout.write(f"USER REZULTATI (beta={best_beta}, half_life={best_half_life})")
+        self.stdout.write(f"USER REZULTATI NA TESTU (beta={best_beta}, half_life={best_half_life})")
         self.stdout.write("")
 
         per_user_header = (
-            f"{'username':>10} | {'train':>5} {'test':>5} | "
+            f"{'username':>10} | {'train':>5} {'val':>5} {'test':>6} | "
             f"{'P.5':>6} {'P.10':>6} | {'R5':>6} {'R10':>6} | "
             f"{'NDCG.5':>8} {'NDCG.10':>9} | {'MRR':>6}"
         )
@@ -331,7 +356,7 @@ class Command(BaseCommand):
         self.stdout.write("-" * len(per_user_header))
         for row in sorted(content_result["per_user"], key=lambda r: r["username"]):
             self.stdout.write(
-                f"{row['username']:>10} | {row['train_n']:>5} {row['test_n']:>5} | "
+                f"{row['username']:>10} | {row['train_n']:>5} {row['val_n']:>5} {row['test_n']:>6} | "
                 f"{row['precision.5']:>6.3f} {row['precision.10']:>6.3f} | "
                 f"{row['recall.5']:>6.3f} {row['recall.10']:>6.3f} | "
                 f"{row['ndcg.5']:>8.3f} {row['ndcg.10']:>9.3f} | "

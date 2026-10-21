@@ -10,49 +10,49 @@ RANDOM_SEED = 42
 N_TIME_GROUPS = 5
 
 USER_PROFILES = {
-    "user1": {
+    "tase": {
         "categories": ["koncert", "festival"],
         "tag_pattern": r"(rok|pop|narodna|elektronska|jazz|klasicna-muzika|hip-hop)",
         "interests": ["Muzika", "Festival"],
         "n_saved": 300,
         "noise_fraction": 0.0,
     },
-    "user2": {
+    "momir": {
         "categories": ["sport", "auto-moto"],
         "tag_pattern": None,
         "interests": ["Sport", "Auto-moto"],
         "n_saved": 150,
         "noise_fraction": 0.0,
     },
-    "user3": {
+    "djordje": {
         "categories": ["kultura"],
         "tag_pattern": r"(predstava|izlozba|promocija)",
         "interests": ["Pozorište", "Umjetnost"],
         "n_saved": 250,
         "noise_fraction": 0.0,
     },
-    "user4": {
+    "nikola": {
         "categories": ["koncert", "sport", "kultura", "festival"],
         "tag_pattern": None,
         "interests": ["Muzika", "Sport", "Pozorište"],
         "n_saved": 200,
         "noise_fraction": 0.3,
     },
-    "user5": {
+    "matija": {
         "categories": ["sport"],
         "tag_pattern": None,
         "interests": ["Sport"],
         "n_saved": 180,
         "noise_fraction": 0.5,
     },
-    "user6": {
+    "mitar": {
         "categories": ["auto-moto"],
         "tag_pattern": None,
         "interests": ["Auto-moto"],
         "n_saved": 15,
         "noise_fraction": 0.0,
     },
-    "user7": {
+    "vukasin": {
         "categories": [
             "koncert", "kultura", "festival", "sport",
             "auto-moto", "ostalo", "saobracaj-obavjestenje",
@@ -62,7 +62,7 @@ USER_PROFILES = {
         "n_saved": 150,
         "noise_fraction": 0.0,
     },
-    "user8": {
+    "teodor": {
         "categories": [],
         "tag_pattern": r"(za-djecu|na-otvorenom)",
         "interests": ["Porodica", "Priroda"],
