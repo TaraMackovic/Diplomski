@@ -315,13 +315,9 @@ def merge_cluster(members):
     def rank(m):
         return (-SOURCE_PRIORITY.get(m["source"], 0),)
 
-    def title_score(m):
-        return (SOURCE_PRIORITY.get(m["source"], 0), len(m["title"]))
-    best_title = max(members, key=title_score)["title"]
+    best_title = max(members, key=lambda m: len((m["title"] or "").strip()))["title"]
 
-    def desc_score(m):
-        return (SOURCE_PRIORITY.get(m["source"], 0), len(m["description"] or ""))
-    best_desc = max(members, key=desc_score)["description"]
+    best_desc = max(members, key=lambda m: len((m["description"] or "").strip()))["description"]
 
     dated = [m for m in members if m["date"] is not None]
     time_known_members = [m for m in dated if m["time_known"]]
