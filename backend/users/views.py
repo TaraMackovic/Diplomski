@@ -169,11 +169,15 @@ def profile_api(request, id):
     profile.phone_number = data.get("phone_number", profile.phone_number)
     profile.city = data.get("city", profile.city)
 
-    if "profile_image" in data and data.get("profile_image"):
-        profile.profile_image = data.get("profile_image")
+    uploaded_image = request.FILES.get("profile_image")
+    if uploaded_image:
+        profile.profile_image = uploaded_image
 
     if "email_notifications" in data:
-        profile.email_notifications = data.get("email_notifications")
+        value = data.get("email_notifications")
+        if isinstance(value, str):
+            value = value.strip().lower() in ("true", "1", "on")
+        profile.email_notifications = bool(value)
 
     profile.save()
 

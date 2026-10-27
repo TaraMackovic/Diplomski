@@ -192,7 +192,7 @@ function Profile() {
                                 <span className="info-value">{profile.last_name || "—"}</span>
                             </div>
                             <div className="info-row">
-                                <span className="info-label">Username</span>
+                                <span className="info-label">Korisničko ime</span>
                                 <span className="info-value">{profile.username || "—"}</span>
                             </div>
                             <div className="info-row">
@@ -221,7 +221,7 @@ function Profile() {
                             </label>
 
                             <label>
-                                Username
+                                Korisničko ime
                                 <input
                                     name="username"
                                     value={form.username}

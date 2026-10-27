@@ -1,18 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../utils/auth";
 import ChangePasswordModal from "../components/ChangePassword";
+import Confirmation from "../components/Confirmation";
 import "../styles/Settings.css";
 
 function AdminSettings() {
     const navigate = useNavigate();
 
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-
-    const handleLogout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        navigate("/login");
-    };
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const handleDeleteAccount = () => {
         const confirmed = window.confirm(
@@ -25,59 +22,69 @@ function AdminSettings() {
 
     return (
         <div className="settings-page">
-            <h1>Podešavanja</h1>
+            <div className="settings-container">
+                <h1>Podešavanja</h1>
 
-            <div className="settings-card">
-                <h3>Profil</h3>
+                <div className="settings-card">
+                    <h3>Profil</h3>
 
-                <button
-                    className="settings-action-btn"
-                    onClick={() => navigate("/admin/profile")}
-                >
-                    Uredi profil
-                </button>
+                    <button
+                        className="settings-action-btn"
+                        onClick={() => navigate("/admin/profile")}
+                    >
+                        Uredi profil
+                    </button>
 
-                <button
-                    className="settings-action-btn"
-                    onClick={() => setShowPasswordModal(true)}
-                >
-                    Promijeni lozinku
-                </button>
+                    <button
+                        className="settings-action-btn"
+                        onClick={() => setShowPasswordModal(true)}
+                    >
+                        Promijeni lozinku
+                    </button>
+                </div>
+
+                <div className="settings-card">
+                    <h3>Administratori</h3>
+
+                    <p className="settings-row-desc" style={{ marginBottom: 14 }}>
+                        Upravljajte korisnicima koji imaju administratorske privilegije.
+                    </p>
+
+                    <button
+                        className="settings-action-btn"
+                        onClick={() => navigate("/admin/users")}
+                    >
+                        Upravljaj administratorima
+                    </button>
+                </div>
+
+                <div className="settings-card logout-zone">
+                    <h3>Podešavanja naloga</h3>
+
+                    <button className="logout-btn" onClick={() => setShowLogoutConfirm(true)}>
+                        Odjavi se
+                    </button>
+
+                    <button className="delete-btn" onClick={handleDeleteAccount}>
+                        Obriši nalog
+                    </button>
+                </div>
+
+                {showPasswordModal && (
+                    <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+                )}
+
+                {showLogoutConfirm && (
+                    <Confirmation
+                        title="Odjava"
+                        message="Da li ste sigurni da se želite odjaviti?"
+                        confirmLabel="Odjavi se"
+                        danger={false}
+                        onConfirm={() => logout(navigate)}
+                        onCancel={() => setShowLogoutConfirm(false)}
+                    />
+                )}
             </div>
-
-            <div className="settings-card">
-                <h3>Administratori</h3>
-
-                <p className="settings-row-desc">
-                    Upravljajte korisnicima koji imaju administratorske privilegije.
-                </p>
-
-                <button
-                    className="settings-action-btn"
-                    onClick={() => navigate("/admin/users")}
-                >
-                    Upravljaj administratorima
-                </button>
-            </div>
-
-            {showPasswordModal && (
-                <ChangePasswordModal
-                    onClose={() => setShowPasswordModal(false)}
-                />
-            )}
-
-            <div className="settings-card logout-zone">
-                <h3>Podešavanja naloga</h3>
-
-                <button className="logout-btn" onClick={handleLogout}>
-                    Odjavi se
-                </button>
-
-                <button className="delete-btn" onClick={handleDeleteAccount}>
-                    Obriši nalog
-                </button>
-            </div>
-
         </div>
     );
 }

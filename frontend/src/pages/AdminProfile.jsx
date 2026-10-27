@@ -138,7 +138,7 @@ function AdminProfile() {
         : null;
 
     return (
-        <div>
+        <div className="admin-profile-container">
             <h1 className="admin-page-title">Moj profil</h1>
 
             <div className="profile-header-card">
@@ -182,7 +182,7 @@ function AdminProfile() {
                         </div>
 
                         <div className="info-row">
-                            <span className="info-label">Username</span>
+                            <span className="info-label">Korisničko ime</span>
                             <span className="info-value">{profile.username || "—"}</span>
                         </div>
 
@@ -217,7 +217,7 @@ function AdminProfile() {
                         </label>
 
                         <label>
-                            Username
+                            Korisničko ime
                             <input
                                 name="username"
                                 value={form.username}

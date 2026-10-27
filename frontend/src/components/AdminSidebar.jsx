@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { logout } from "../utils/auth";
+import Confirmation from "../components/Confirmation";
 import "../styles/AdminPanel.css";
 
 function AdminSidebar() {
     const [open, setOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const navigate = useNavigate();
     const close = () => setOpen(false);
 
     const links = [
@@ -45,7 +49,29 @@ function AdminSidebar() {
                         {label}
                     </NavLink>
                 ))}
+
+                <button
+                    type="button"
+                    className="admin-link admin-logout"
+                    onClick={() => {
+                        close();
+                        setShowLogoutConfirm(true);
+                    }}
+                >
+                    Odjava
+                </button>
             </nav>
+
+            {showLogoutConfirm && (
+                <Confirmation
+                    title="Odjava"
+                    message="Da li ste sigurni da se želite odjaviti?"
+                    confirmLabel="Odjavi se"
+                    danger={false}
+                    onConfirm={() => logout(navigate)}
+                    onCancel={() => setShowLogoutConfirm(false)}
+                />
+            )}
         </>
     );
 }

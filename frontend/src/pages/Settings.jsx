@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { getCurrentUserId } from "../utils/auth";
+import { getCurrentUserId, logout } from "../utils/auth";
 import ChangePasswordModal from "../components/ChangePassword";
 import InterestsModal from "../components/InterestSettings";
+import Confirmation from "../components/Confirmation";
 import "../styles/Settings.css";
 
 function Settings() {
@@ -16,6 +17,7 @@ function Settings() {
     const [msg, setMsg] = useState("");
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showInterestsModal, setShowInterestsModal] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     useEffect(() => {
         if (!userId) {
@@ -41,7 +43,6 @@ function Settings() {
         try {
             setSavingNotif(true);
             const response = await api.put(`/profile/${userId}/`, {
-                ...profile,
                 email_notifications: !profile.email_notifications,
             });
             setProfile(response.data);
@@ -52,12 +53,6 @@ function Settings() {
         } finally {
             setSavingNotif(false);
         }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        navigate("/login");
     };
 
     const handleDeleteAccount = () => {
@@ -123,7 +118,7 @@ function Settings() {
                 <div className="settings-card logout-zone">
                     <h3>Podešavanja naloga</h3>
 
-                    <button className="logout-btn" onClick={handleLogout}>
+                    <button className="logout-btn" onClick={() => setShowLogoutConfirm(true)}>
                         Odjavi se
                     </button>
 
@@ -138,6 +133,17 @@ function Settings() {
 
                 {showInterestsModal && (
                     <InterestsModal onClose={() => setShowInterestsModal(false)} />
+                )}
+
+                {showLogoutConfirm && (
+                    <Confirmation
+                        title="Odjava"
+                        message="Da li ste sigurni da se želite odjaviti?"
+                        confirmLabel="Odjavi se"
+                        danger={false}
+                        onConfirm={() => logout(navigate)}
+                        onCancel={() => setShowLogoutConfirm(false)}
+                    />
                 )}
             </div>
         </div>

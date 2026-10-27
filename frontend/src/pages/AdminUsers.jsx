@@ -1,24 +1,31 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import Pagination from "../components/Pagination";
 import Confirmation from "../components/Confirmation";
+import useInfiniteList from "../utils/useInfiniteList";
 import "../styles/AdminPanel.css";
 
 function AdminUsers() {
     const navigate = useNavigate();
-
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
 
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
     const [ordering, setOrdering] = useState("-date_joined");
 
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const {
+        items: users,
+        loading,
+        loadingMore,
+        error,
+        sentinelRef,
+        reload,
+    } = useInfiniteList("/admin-api/users/", {
+        search,
+        status: statusFilter,
+        role: roleFilter,
+        ordering,
+    });
 
     const [activeTarget, setActiveTarget] = useState(null);
     const [activeError, setActiveError] = useState("");
@@ -54,53 +61,12 @@ function AdminUsers() {
         setCreateError("");
     };
 
-    useEffect(() => {
-        loadUsers();
-    }, [search, statusFilter, roleFilter, ordering, page]);
-
-    useEffect(() => {
-        setPage(1);
-    }, [search, statusFilter, roleFilter, ordering]);
-
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get("/admin-api/users/", {
-                params: {
-                    search,
-                    status: statusFilter,
-                    role: roleFilter,
-                    ordering,
-                    page,
-                    page_size: 15,
-                },
-            });
-            setUsers(response.data.results);
-            setTotalPages(response.data.meta.total_pages);
-        } catch (err) {
-            console.log(err);
-            setError("Ne mogu da učitam korisnike.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const toggleActive = async (user) => {
-        try {
-            await api.post(`/admin-api/users/${user.id}/toggle-active/`);
-            loadUsers();
-        } catch (err) {
-            console.log(err);
-            alert(err.response?.data?.message || "Greška.");
-        }
-    };
-
     const confirmToggleActive = async () => {
         try {
             await api.post(`/admin-api/users/${activeTarget.id}/toggle-active/`);
             setActiveTarget(null);
             setActiveError("");
-            loadUsers();
+            reload();
         } catch (err) {
             setActiveError(err.response?.data?.message || "Greška.");
         }
@@ -111,7 +77,7 @@ function AdminUsers() {
             await api.post(`/admin-api/users/${staffTarget.id}/toggle-staff/`);
             setStaffTarget(null);
             setStaffError("");
-            loadUsers();
+            reload();
         } catch (err) {
             setStaffError(err.response?.data?.message || "Greška.");
         }
@@ -122,7 +88,7 @@ function AdminUsers() {
             await api.delete(`/admin-api/users/${deleteTarget.id}/delete/`);
             setDeleteTarget(null);
             setDeleteError("");
-            loadUsers();
+            reload();
         } catch (err) {
             setDeleteError(err.response?.data?.message || "Greška prilikom brisanja.");
         }
@@ -153,7 +119,7 @@ function AdminUsers() {
             });
 
             setCreating(false);
-            loadUsers();
+            reload();
         } catch (err) {
             console.log(err);
 
@@ -242,9 +208,9 @@ function AdminUsers() {
             {loading ? (
                 <p className="admin-empty">Učitavanje...</p>
             ) : error ? (
-                <p className="admin-empty">{error}</p>
+                <p className="admin-empty">Ne mogu da učitam korisnike.</p>
             ) : (
-                <div className="admin-table-wrapper">
+                <div className="admin-table-wrapper admin-table-scroll">
                     <table className="admin-table">
                         <thead>
                             <tr>
@@ -260,7 +226,7 @@ function AdminUsers() {
                         </thead>
                         <tbody>
                             {users.length === 0 ? (
-                                <tr><td colSpan={9} className="admin-empty">Nema korisnika.</td></tr>
+                                <tr><td colSpan={8} className="admin-empty">Nema korisnika.</td></tr>
                             ) : users.map((u) => (
                                 <tr key={u.id}>
                                     <td>{u.username}</td>
@@ -310,10 +276,12 @@ function AdminUsers() {
                             ))}
                         </tbody>
                     </table>
+
+                    <div ref={sentinelRef} className="admin-load-more">
+                        {loadingMore ? "Učitavanje..." : ""}
+                    </div>
                 </div>
             )}
-
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
             {deleteTarget && (
                 <Confirmation

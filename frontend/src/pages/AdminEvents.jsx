@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import Pagination from "../components/Pagination";
 import Confirmation from "../components/Confirmation";
+import useInfiniteList from "../utils/useInfiniteList";
 import { formatEventDate } from "../utils/formatEventDate";
 
 import "../styles/AdminPanel.css";
@@ -16,32 +16,28 @@ const STATUS_LABELS = {
 function AdminEvents() {
     const navigate = useNavigate();
 
-    const [events, setEvents] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
 
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
     const [status, setStatus] = useState("");
     const [ordering, setOrdering] = useState("-start_date");
 
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-
     const [deleteTarget, setDeleteTarget] = useState(null);
+
+    const {
+        items: events,
+        loading,
+        loadingMore,
+        error,
+        hasMore,
+        sentinelRef,
+        reload,
+    } = useInfiniteList("/admin-api/events/", { search, category, status, ordering });
 
     useEffect(() => {
         loadCategories();
     }, []);
-
-    useEffect(() => {
-        loadEvents();
-    }, [search, category, status, ordering, page]);
-
-    useEffect(() => {
-        setPage(1);
-    }, [search, category, status, ordering]);
 
     const loadCategories = async () => {
         try {
@@ -52,27 +48,11 @@ function AdminEvents() {
         }
     };
 
-    const loadEvents = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get("/admin-api/events/", {
-                params: { search, category, status, ordering, page, page_size: 15 },
-            });
-            setEvents(response.data.results);
-            setTotalPages(response.data.meta.total_pages);
-        } catch (err) {
-            console.log(err);
-            setError("Ne mogu da učitam događaje.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const confirmDelete = async () => {
         try {
             await api.delete(`/admin-api/events/${deleteTarget.id}/`);
             setDeleteTarget(null);
-            loadEvents();
+            reload();
         } catch (err) {
             console.log(err);
             setDeleteTarget(null);
@@ -121,9 +101,9 @@ function AdminEvents() {
             {loading ? (
                 <p className="admin-empty">Učitavanje...</p>
             ) : error ? (
-                <p className="admin-empty">{error}</p>
+                <p className="admin-empty">Ne mogu da učitam događaje.</p>
             ) : (
-                <div className="admin-table-wrapper">
+                <div className="admin-table-wrapper admin-table-scroll">
                     <table className="admin-table">
                         <thead>
                             <tr>
@@ -179,10 +159,12 @@ function AdminEvents() {
                             ))}
                         </tbody>
                     </table>
+
+                    <div ref={sentinelRef} className="admin-load-more">
+                        {loadingMore ? "Učitavanje..." : hasMore ? "" : ""}
+                    </div>
                 </div>
             )}
-
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
             {deleteTarget && (
                 <Confirmation

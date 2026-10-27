@@ -25,3 +25,10 @@ export function getCurrentUserId() {
 export function isLoggedIn() {
     return !!localStorage.getItem("access_token");
 }
+
+export function logout(navigate) {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("is_staff");
+    navigate("/login", { replace: true });
+}
