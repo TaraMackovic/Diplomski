@@ -40,7 +40,7 @@ function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="admin-page-title">Dashboard</h1>
+            <h1 className="admin-page-title">Statistika</h1>
 
             <div className="admin-stats-grid">
                 {cards.map((c) => (

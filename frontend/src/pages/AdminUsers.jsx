@@ -200,7 +200,7 @@ function AdminUsers() {
                 <select className="admin-select" value={ordering} onChange={(e) => setOrdering(e.target.value)}>
                     <option value="-date_joined">Registracija (najnovija)</option>
                     <option value="date_joined">Registracija (najstarija)</option>
-                    <option value="username">Korisničko ime (A-Š)</option>
+                    <option value="username">Korisničko ime (rastuće)</option>
                     <option value="-saved_events_count">Najviše sačuvanih</option>
                 </select>
             </div>

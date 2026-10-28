@@ -11,7 +11,7 @@ function AdminSidebar() {
     const close = () => setOpen(false);
 
     const links = [
-        { to: "/admin/dashboard", label: "Dashboard" },
+        { to: "/admin/dashboard", label: "Statistika" },
         { to: "/admin/users", label: "Korisnici" },
         { to: "/admin/events", label: "Događaji" },
         { to: "/admin/categories", label: "Kategorije" },
@@ -64,7 +64,7 @@ function AdminSidebar() {
 
             {showLogoutConfirm && (
                 <Confirmation
-                    title="Odjava"
+                    title="Odjavi se"
                     message="Da li ste sigurni da se želite odjaviti?"
                     confirmLabel="Odjavi se"
                     danger={false}

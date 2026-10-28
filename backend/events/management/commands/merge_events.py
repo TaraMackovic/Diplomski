@@ -337,7 +337,7 @@ def merge_cluster(members):
     lon = best_loc_member["longitude"]
 
     priced = [m["price"] for m in members if m["price"]]
-    price = max(priced) if priced else 0
+    price = min(priced) if priced else 0
 
     cats = [m["category"] for m in members]
     category = max(set(cats), key=cats.count)

@@ -105,16 +105,6 @@ function Navbar() {
                     </NavLink>
                 ))}
 
-                {isLoggedIn && (
-                    <button
-                        type="button"
-                        className="tabbar-item tabbar-logout"
-                        onClick={() => setShowLogoutConfirm(true)}
-                    >
-                        <img src={logoutIcon} alt="Odjava" className="navbar-icon" />
-                        <span>Odjava</span>
-                    </button>
-                )}
             </nav>
 
             {showLogoutConfirm && (

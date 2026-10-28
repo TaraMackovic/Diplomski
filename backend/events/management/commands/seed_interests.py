@@ -3,7 +3,7 @@ from django.utils.text import slugify
 from events.models import Interest
 
 DEFAULT_INTERESTS = [
-    ("Muzika", "koncert, rok, pop, narodna, elektronska, jazz, klasicna-muzika, hip-hop"),
+    ("Muzika", "koncert, muzika"),
     ("Film", "film"),
     ("Festival", "festival"),
     ("Porodica", "za-djecu, porodicni"),
@@ -11,7 +11,7 @@ DEFAULT_INTERESTS = [
     ("Pozorište", "predstava, kultura"),
     ("Priroda", "na-otvorenom"),
     ("Umjetnost", "izlozba"),
-    ("Noćni život", "zurka, klub"),
+    ("Noćni život", "klub"),
     ("Radionice", "radionica, promocija"),
     ("Auto-moto", "auto-moto"),
 ]

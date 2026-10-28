@@ -88,8 +88,8 @@ function AdminEvents() {
                 <select className="admin-select" value={ordering} onChange={(e) => setOrdering(e.target.value)}>
                     <option value="-start_date">Datum (najnoviji)</option>
                     <option value="start_date">Datum (najstariji)</option>
-                    <option value="title">Naziv (A-Š)</option>
-                    <option value="-title">Naziv (Š-A)</option>
+                    <option value="title">Naziv (rastuće)</option>
+                    <option value="-title">Naziv (opadajuće)</option>
                     <option value="-created_at">Kreirano (najnovije)</option>
                 </select>
 
